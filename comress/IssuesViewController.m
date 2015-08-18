@@ -20,15 +20,12 @@
 @property (nonatomic, strong) NSArray *meArr;
 
 @property (nonatomic, strong) NSArray *sectionHeaders;
-@property (nonatomic, strong) NSMutableArray *postsNotSeen;
-
-@property (nonatomic, strong) NSMutableArray *theNewIssuesIndexPathArray;
 
 @end
 
 @implementation IssuesViewController
 
-@synthesize selectedContractTypeId, theNewIssuesIndexPathArray,currentSelectedIndexPathForNewIssue;
+@synthesize selectedContractTypeId,indexPathsOfNewPostsArray,currentIndexSelected;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -50,8 +47,6 @@
         POisLoggedIn = NO;
     }
     
-    
-    self.postsNotSeen = [[NSMutableArray alloc] init];
     
     UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
     [refreshControl addTarget:self action:@selector(refresh:) forControlEvents:UIControlEventValueChanged];
@@ -92,27 +87,26 @@
     UIImage *bulbImg = [UIImage imageNamed:[NSString stringWithFormat:@"bulb_%@@2x.png",toggle]];
     [self.bulbButton setImage:bulbImg forState:UIControlStateNormal];
     
-    currentSelectedIndexPathForNewIssue = 0;
+    currentIndexSelected = 0;
     
     [self.bulbButton addTarget:self action:@selector(scrollToNewIssue) forControlEvents:UIControlEventTouchUpInside];
 }
 
 - (void)scrollToNewIssue
 {
-    [self.issuesTable scrollToRowAtIndexPath:[theNewIssuesIndexPathArray firstObject] atScrollPosition:UITableViewScrollPositionTop animated:YES];
+    if(indexPathsOfNewPostsArray.count == 0)
+        return;
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        
-        if(currentSelectedIndexPathForNewIssue > theNewIssuesIndexPathArray.count - 1)
-            currentSelectedIndexPathForNewIssue = 0;
-        DDLogVerbose(@"currentSelectedIndexPathForNewIssue %d",currentSelectedIndexPathForNewIssue);
-        DDLogVerbose(@"theNewIssuesIndexPathArray %@",theNewIssuesIndexPathArray);
-        [self.issuesTable selectRowAtIndexPath:[theNewIssuesIndexPathArray objectAtIndex:currentSelectedIndexPathForNewIssue] animated:YES scrollPosition:UITableViewScrollPositionTop];
-        
-        currentSelectedIndexPathForNewIssue++;
-        
-    });
+    NSIndexPath *indexpath = [indexPathsOfNewPostsArray objectAtIndex:currentIndexSelected];
+
+    [self.issuesTable scrollToRowAtIndexPath:indexpath atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
     
+    [self.issuesTable selectRowAtIndexPath:indexpath animated:YES scrollPosition:UITableViewScrollPositionNone];
+
+    if(currentIndexSelected >= indexPathsOfNewPostsArray.count - 1)
+        currentIndexSelected = 0;
+    else
+        currentIndexSelected++;
 }
 
 
@@ -173,9 +167,6 @@
 
 - (IBAction)segmentControlChange:(id)sender
 {
-    //MESegmentedControl *segment = (MESegmentedControl *)sender;
-    //self.segment = segment;
-    
     [self fetchPostsWithNewIssuesUp:NO];
 }
 
@@ -210,11 +201,7 @@
     if(myDatabase.initializingComplete == 1)
     {
         [self fetchPostsWithNewIssuesUp:NO];
-        
-        [self setSegmentBadge];
     }
-    
-    [self.segment clearBadges];
     
     [self.issuesTable reloadData];
     
@@ -446,7 +433,10 @@
         
         else if(self.segment.selectedSegmentIndex == 1)
         {
-            dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
+            if(PMisLoggedIn)
+                dict = [[[[self.postsArray safeObjectAtIndex:indexPath.section] firstObject] objectForKey:@"users"] safeObjectAtIndex:indexPath.row];
+            else
+                dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
         }
         else
         {
@@ -521,10 +511,6 @@
             
             post = [[Post alloc] init];
             
-            [theNewIssuesIndexPathArray removeAllObjects];
-            theNewIssuesIndexPathArray = nil;
-            theNewIssuesIndexPathArray = [[NSMutableArray alloc] init];
-            
             NSDictionary *params = @{@"order":@"order by updated_on desc"};
             
             if(self.segment.selectedSegmentIndex == 0)
@@ -535,6 +521,8 @@
                         self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:YES onlyOverDue:NO fromSurvey:NO]];
                     else
                         self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:NO onlyOverDue:NO fromSurvey:NO]];
+                    
+                    [self saveIndexPathsOfNewPostsWithSection:NO];
                 }
                 else if (PMisLoggedIn)
                 {
@@ -545,6 +533,8 @@
                     
                     // group the post
                     [self groupPostForGroupType:@"under_by"];
+                    
+                    [self saveIndexPathsOfNewPostsWithSection:YES];
                 }
                 
                 self.meArr = self.postsArray;
@@ -563,10 +553,20 @@
                 }
                 else if (PMisLoggedIn)
                 {
+
+//                    if(newIssuesUp)
+//                        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParamsForPM:params forPostId:nil filterByBlock:NO newIssuesFirst:YES onlyOverDue:NO]];
+//                    else
+//                        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParamsForPM:params forPostId:nil filterByBlock:NO newIssuesFirst:NO onlyOverDue:NO]];
+                    
+                    //
                     if(newIssuesUp)
-                        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParamsForPM:params forPostId:nil filterByBlock:NO newIssuesFirst:YES onlyOverDue:NO]];
+                        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParamsForPMOthers:params forPostId:nil filterByBlock:NO newIssuesFirst:YES onlyOverDue:NO]];
                     else
-                        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParamsForPM:params forPostId:nil filterByBlock:NO newIssuesFirst:NO onlyOverDue:NO]];
+                        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParamsForPMOthers:params forPostId:nil filterByBlock:NO newIssuesFirst:NO onlyOverDue:NO]];
+                    //
+                    
+//                    [post fetchIssuesWithParamsForPMOthers:params forPostId:nil filterByBlock:NO newIssuesFirst:NO onlyOverDue:NO];
                     
                     // group the post
                     [self groupPostForPM];
@@ -581,6 +581,8 @@
                         self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:YES onlyOverDue:YES fromSurvey:NO]];
                     else
                         self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:NO onlyOverDue:YES fromSurvey:NO]];
+                    
+                    [self saveIndexPathsOfNewPostsWithSection:NO];
                 }
                 else if (PMisLoggedIn)
                 {
@@ -591,20 +593,25 @@
                     
                     // group the post
                     [self groupPostForGroupType:@"under_by"];
+                    
+                    [self saveIndexPathsOfNewPostsWithSection:YES];
                 }
             }
             
             
             //update ui
             dispatch_async(dispatch_get_main_queue(), ^{
-                
+
                 [self.issuesTable reloadData];
                 
                 [self setSegmentBadge];
                 
-                if(theNewIssuesIndexPathArray.count > 0){
+                if(indexPathsOfNewPostsArray.count > 0){
                     [[NSNotificationCenter defaultCenter] postNotificationName:@"toggleBulbIcon" object:nil userInfo:@{@"toggle":@"on"}];
                 }
+                else
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"toggleBulbIcon" object:nil userInfo:@{@"toggle":@"off"}];
+                    
             });
         }
         @catch (NSException *exception) {
@@ -616,11 +623,57 @@
 //    });
 }
 
+#pragma mark - indexpaths of post
+- (void)saveIndexPathsOfNewPostsWithSection:(BOOL)withSection
+{
+    [indexPathsOfNewPostsArray removeAllObjects];
+    indexPathsOfNewPostsArray = nil;
+    
+    indexPathsOfNewPostsArray = [[NSMutableArray alloc] init];
+    
+    if(withSection == NO) //normal single list
+    {
+        for (int i = 0; i < self.postsArray.count; i++) {
+            NSDictionary *dict = [self.postsArray objectAtIndex:i];
+            
+            NSDictionary *postDict = [[dict objectForKey:[[dict allKeys] firstObject]] objectForKey:@"post"];
+            
+            if([[postDict valueForKey:@"seen"] boolValue] == NO)
+            {
+                NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
+                
+                [indexPathsOfNewPostsArray addObject:indexPath];
+            }
+        }
+    }
+    else
+    {
+        NSArray *thePosts = self.postsArray;
+        
+        for (int i = 0; i < thePosts.count; i++) {
+            NSArray *arr = [thePosts objectAtIndex:i];
+            
+            for (int x = 0; x < arr.count; x++) {
+                NSDictionary *dict = [arr objectAtIndex:x];
+                
+                NSDictionary *postDict = [[dict objectForKey:[[dict allKeys] firstObject]] objectForKey:@"post"];
+                
+                if([[postDict valueForKey:@"seen"] boolValue] == NO)
+                {
+                    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:x inSection:i];
+                    
+                    [indexPathsOfNewPostsArray addObject:indexPath];
+                }
+            }
+        }
+    }
+}
+
 #pragma mark - grouping of post
 - (void)groupPostForGroupType:(NSString *)groupType
 {
     NSMutableArray *sectionHeaders = [[NSMutableArray alloc] init];
-    
+
     //reconstruct array to create headers
     for (int i = 0; i < self.postsArray.count; i++) {
         NSDictionary *top = (NSDictionary *)[self.postsArray objectAtIndex:i];
@@ -781,7 +834,13 @@
     }
     
     else if(self.segment.selectedSegmentIndex == 1)
-        count = [[self.postsArray objectAtIndex:section] count];
+    {
+        if(PMisLoggedIn)
+            count = [[[[self.postsArray objectAtIndex:section] firstObject] objectForKey:@"users"] count];
+        else
+             count = [[self.postsArray objectAtIndex:section] count];
+    }
+    
     else
     {
         if(POisLoggedIn)
@@ -812,7 +871,13 @@
         }
         
         else if(self.segment.selectedSegmentIndex == 1)
-            dict = [[self.postsArray safeObjectAtIndex:indexPath.section] safeObjectAtIndex:indexPath.row];
+        {
+            if(PMisLoggedIn)
+                dict = [[[[self.postsArray safeObjectAtIndex:indexPath.section] firstObject] objectForKey:@"users"] safeObjectAtIndex:indexPath.row];
+            else
+                dict = [[self.postsArray safeObjectAtIndex:indexPath.section] safeObjectAtIndex:indexPath.row];
+        }
+        
         else
         {
             if(POisLoggedIn)
@@ -833,16 +898,6 @@
         }
         else
         {
-            BOOL seen = [[[[dict objectForKey:[[dict allKeys] firstObject]] objectForKey:@"post"] valueForKey:@"seen"] boolValue];
-
-            if(seen == NO)
-            {
-                if([theNewIssuesIndexPathArray containsObject:indexPath] == NO)
-                {
-                    [theNewIssuesIndexPathArray addObject:indexPath];
-                }
-            }
-            
             IssuesTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:nonPmCellIdentifier forIndexPath:indexPath];
             
             [cell initCellWithResultSet:dict forSegment:self.segment.selectedSegmentIndex];

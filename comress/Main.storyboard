@@ -822,9 +822,6 @@
                                 <state key="normal" image="bulb_off.png">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
-                                <connections>
-                                    <action selector="moveNewIssuesUp:" destination="9pv-A4-QxB" eventType="touchUpInside" id="hM6-q4-PpX"/>
-                                </connections>
                             </button>
                             <color key="tintColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                         </barButtonItem>
@@ -2040,7 +2037,7 @@
                                                             <rect key="frame" x="0.0" y="0.0" width="80" height="80"/>
                                                             <autoresizingMask key="autoresizingMask"/>
                                                             <subviews>
-                                                                <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="UyS-n6-qnE">
+                                                                <imageView userInteractionEnabled="NO" tag="1" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UyS-n6-qnE">
                                                                     <rect key="frame" x="0.0" y="0.0" width="22" height="33"/>
                                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                                 </imageView>
@@ -6407,10 +6404,10 @@ Please note that, by using the Town Council’s services, you signify that you h
         <image name="user168.png" width="64" height="64"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="SMc-XH-H8D"/>
         <segue reference="Pdc-0J-hiS"/>
-        <segue reference="Xuv-qH-m2P"/>
-        <segue reference="T57-Bj-j4u"/>
+        <segue reference="SMc-XH-H8D"/>
+        <segue reference="q2U-TG-uMs"/>
         <segue reference="wel-of-2Aw"/>
+        <segue reference="Xuv-qH-m2P"/>
     </inferredMetricsTieBreakers>
 </document>

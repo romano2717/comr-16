@@ -42,8 +42,8 @@
 
 @property (nonatomic, assign) int selectedContractTypeId;
 
-@property (nonatomic, assign) int currentSelectedIndexPathForNewIssue;
+@property (nonatomic, strong) NSMutableArray *indexPathsOfNewPostsArray;
 
-
+@property (nonatomic, assign) int currentIndexSelected;
 
 @end

@@ -23,9 +23,9 @@
 - (void)initCellWithResultSet:(NSDictionary *)dict
 {
     int unreadMessage = [[dict valueForKey:@"unreadPost"] intValue];
-    
-    self.poNameLabel.text = [NSString stringWithFormat:@"%@ (%d)",[dict valueForKey:@"po"],[[dict valueForKey:@"count"] intValue]];
 
+    self.poNameLabel.text = [NSString stringWithFormat:@"%@ (%d)",[dict valueForKey:@"user"],[[dict valueForKey:@"count"] intValue]];
+    
     //remove any subview of messageCountBadge before adding one
     for (UIView *subView in [self.messageCountBadge subviews]) {
         [subView removeFromSuperview];

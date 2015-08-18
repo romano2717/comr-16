@@ -303,11 +303,8 @@ contract_type;
                     }
                 }
                 
-
-                
                 NSMutableDictionary *postDict = [[NSMutableDictionary alloc] init];
                 NSMutableDictionary *postChild = [[NSMutableDictionary alloc] init];
-                
                 
                 [postChild setObject:[rsPost resultDictionary] forKey:@"post"];
                 
@@ -328,7 +325,7 @@ contract_type;
                 }
                 
                 //OTHERS: check if this block is owned by a PO/contractor under the current user's pm/supervisor
-                if(onlyOverDue == NO && filter == NO && fromSurvey == NO)
+                if(onlyOverDue == NO && filter == NO && fromSurvey == NO && postId == nil)
                 {
                     if(POisLoggedIn)
                     {
@@ -597,7 +594,6 @@ contract_type;
         NSDictionary *dict = [postIdArray objectAtIndex:i];
         
         NSNumber *clientPostId = [dict valueForKey:@"clientPostId"];
-        NSNumber *serverPostId = [dict valueForKey:@"post_id"];
         NSString *POId = [dict valueForKey:@"POId"];
 
         if(filter == YES)
@@ -650,6 +646,70 @@ contract_type;
         }
     }
     return postArray;
+}
+
+
+- (NSArray *)fetchIssuesWithParamsForPMOthers:(NSDictionary *)params forPostId:(NSNumber *)postId filterByBlock:(BOOL)filter newIssuesFirst:(BOOL)newIssuesFirst onlyOverDue:(BOOL)onlyOverDue
+{
+    /*
+     
+     . get a list of all divisions
+     . get all users under per division
+     . count how many posts belong to this user under this division
+     
+     */
+    
+    NSMutableArray *groupedUserPerDiv = [[NSMutableArray alloc] init];
+    
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        
+        NSMutableArray *divisionArray = [[NSMutableArray alloc] init];
+        
+        
+        
+        FMResultSet *rsGetDiv = [db executeQuery:@"select division from block_user_mapping where supervisor_id != ? group by division",[myDatabase.userDictionary valueForKey:@"user_id"]];
+        
+        while ([rsGetDiv next]) {
+            [divisionArray addObject:[rsGetDiv stringForColumn:@"division"]];
+        }
+        
+        
+        for (int i = 0; i < divisionArray.count; i++) {
+            FMResultSet *rsGetUsers = [db executeQuery:@"select user_id from block_user_mapping where division = ? group by user_id",[divisionArray objectAtIndex:i]];
+            
+            NSMutableArray *usersArray = [[NSMutableArray alloc] init];
+            
+            while ([rsGetUsers next]) {
+                
+                NSString *userId = [rsGetUsers stringForColumn:@"user_id"];
+                
+                //count how many post belong to this user
+                FMResultSet *rsPostCount = [db executeQuery:@"select count(*) as count from post p left join block_user_mapping bum on p.block_id=bum.block_id where bum.user_id = ?",userId];
+                
+                int postCount = 0;
+                int unreadPostCount = 0;
+                
+                while ([rsPostCount next]) {
+                    postCount = [rsPostCount intForColumn:@"count"];
+                }
+                
+                
+                //count how many unread post for this user
+                FMResultSet *rsUnreadPostCount = [db executeQuery:@"select count(*)as count from comment_noti where post_id in(select post_id from post p left join block_user_mapping bum on p.block_id=bum.block_id where bum.user_id = ?)",userId];
+                while ([rsUnreadPostCount next]) {
+                    unreadPostCount = [rsUnreadPostCount intForColumn:@"count"];
+                }
+                
+                
+                if(postCount > 0)
+                    [usersArray addObject:@{@"user":userId,@"count":[NSNumber numberWithInt:postCount],@"unreadPost":[NSNumber numberWithInt:unreadPostCount],@"division":[divisionArray objectAtIndex:i]}];
+            }
+            
+            [groupedUserPerDiv addObject:@{@"division":[divisionArray objectAtIndex:i],@"users":usersArray}];
+        }
+    }];
+    
+    return groupedUserPerDiv;
 }
 
 - (NSArray *)fetchIssuesForPO:(NSString *)poID

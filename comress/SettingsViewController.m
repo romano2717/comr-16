@@ -330,7 +330,7 @@
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
         
-        FMResultSet *rsPostCheck = [db executeQuery:@"select post_id from post where post_id = ?",zero];
+        FMResultSet *rsPostCheck = [db executeQuery:@"select post_id from post where post_id = ? or post_id is null",zero];
         if([rsPostCheck next] == YES)
             everythingIsSync = NO;
         

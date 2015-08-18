@@ -22,7 +22,7 @@
     
     NavigationBarTitleWithSubtitleView *navigationBarTitleView = [[NavigationBarTitleWithSubtitleView alloc] init];
     [self.navigationItem setTitleView: navigationBarTitleView];
-    [navigationBarTitleView setTitleText:[poDict valueForKey:@"po"]];
+    [navigationBarTitleView setTitleText:[poDict valueForKey:@"user"]];
     [navigationBarTitleView setDetailText:[poDict valueForKey:@"division"]];
     
     self.pOIssuesTableView.estimatedRowHeight = 115.0;
@@ -92,7 +92,7 @@
 {
     [super viewWillAppear:animated];
     
-    self.postsArray = [post fetchIssuesForPO:[poDict valueForKey:@"po"]];
+    self.postsArray = [post fetchIssuesForPO:[poDict valueForKey:@"user"]];
 }
 
 

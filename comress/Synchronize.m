@@ -261,7 +261,9 @@
         
         self.uploadPostFromSelfIsFinished = NO;
         [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_post_send] parameters:postListDict success:^(AFHTTPRequestOperation *operation, id responseObject) {
-            if(stop)return;
+            
+            if(stop)
+                return;
             
             self.uploadPostFromSelfIsFinished = YES;
             

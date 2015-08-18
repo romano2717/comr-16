@@ -107,6 +107,12 @@
         }];
         if(needtoInit == YES)
             self.segueTo = @"modal_initializer";
+        else
+        {
+            //start sync
+            sync = [Synchronize sharedManager];
+            sync.stop = NO;
+        }
     }
 }
 

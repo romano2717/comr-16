@@ -41,10 +41,12 @@
 #if DEBUG
         NSString *postTopic = @"";
         
+        NSString *seenTag = [[postDict valueForKey:@"seen"] boolValue] ? @"" : @"!";
+        
         if([postDict valueForKey:@"post_id"] == [NSNull null])
-            postTopic = [NSString stringWithFormat:@"%d:%@",0,[postDict valueForKey:@"post_topic"]];
+            postTopic = [NSString stringWithFormat:@"%d%@:%@",0,seenTag,[postDict valueForKey:@"post_topic"]];
         else
-            postTopic = [NSString stringWithFormat:@"%d:%@",[[postDict valueForKey:@"post_id"] intValue],[postDict valueForKey:@"post_topic"]];
+            postTopic = [NSString stringWithFormat:@"%d%@:%@",[[postDict valueForKey:@"post_id"] intValue],seenTag,[postDict valueForKey:@"post_topic"]];
 #else
         NSString *postTopic = [postDict valueForKey:@"post_topic"] ? [postDict valueForKey:@"post_topic"] : @"Untitled";
 #endif
@@ -165,6 +167,7 @@
         if(severity == 2)//Routine
             pinImageView.hidden = YES;
         
+
         if(newCommentsCounter > 0)
         {
             commentsCount.hidden = NO;

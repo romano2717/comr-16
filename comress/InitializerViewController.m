@@ -912,7 +912,7 @@
                 }
                 else
                 {
-                    BOOL ups = [theDb executeUpdate:@"update post set status = ?, block_id = ?, level = ?, address = ?, post_by = ?, post_topic = ?, post_type = ?, postal_code = ?, severity = ?, post_date = ?, contract_type = ?, dueDate = ?, updated_on = ? where post_id = ?",ActionStatus,BlkId,Level,Location,PostBy,PostTopic,PostType,PostalCode,Severity,PostDate,contractType,DueDate,LastUpdatedDate,PostId];
+                    BOOL ups = [theDb executeUpdate:@"update post set status = ?, block_id = ?, level = ?, address = ?, post_by = ?, post_topic = ?, post_type = ?, postal_code = ?, severity = ?, post_date = ?, contract_type = ?, dueDate = ?, updated_on = ?, seen = ? where post_id = ?",ActionStatus,BlkId,Level,Location,PostBy,PostTopic,PostType,PostalCode,Severity,PostDate,contractType,DueDate,LastUpdatedDate, [NSNumber numberWithBool:YES], PostId];
                     
                     if(!ups)
                     {

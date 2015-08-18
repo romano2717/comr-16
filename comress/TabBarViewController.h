@@ -12,12 +12,14 @@
 #import "Device_token.h"
 #import "Users.h"
 #import "Blocks.h"
+#import "Synchronize.h"
 
 @interface TabBarViewController : UITabBarController<UITabBarControllerDelegate>
 {
     Database *myDatabase;
     Users *user;
     Blocks *blocks;
+    Synchronize *sync;
 }
 
 @property (nonatomic, strong) NSString *segueTo;
