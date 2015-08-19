@@ -896,13 +896,14 @@
             NSDate *DueDate = [myDatabase createNSDateWithWcfDateString:[dictPost valueForKey:@"DueDate"]];
             NSDate *LastUpdatedDate = [myDatabase createNSDateWithWcfDateString:[dictPost valueForKey:@"LastUpdatedDate"]];
             NSNumber *contractType = [dictPost valueForKey:@"PostGroup"];
+            NSNumber *RelatedPostId = [NSNumber numberWithInt:[[dictPost valueForKey:@"RelatedPostId"] intValue]];
 
             [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
                 
                 FMResultSet *rsPostCheck = [theDb executeQuery:@"select * from post where post_id = ?",PostId];
                 if([rsPostCheck next] == NO)
                 {
-                    BOOL qIns = [theDb executeUpdate:@"insert into post (status, block_id, level, address, post_by, post_id, post_topic, post_type, postal_code, severity, post_date, updated_on, contract_type, dueDate) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",ActionStatus, BlkId, Level, Location, PostBy, PostId, PostTopic, PostType, PostalCode, Severity, PostDate, LastUpdatedDate, contractType, DueDate];
+                    BOOL qIns = [theDb executeUpdate:@"insert into post (status, block_id, level, address, post_by, post_id, post_topic, post_type, postal_code, severity, post_date, updated_on, contract_type, dueDate, relatedPostId, seen) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",ActionStatus, BlkId, Level, Location, PostBy, PostId, PostTopic, PostType, PostalCode, Severity, PostDate, LastUpdatedDate, contractType, DueDate, RelatedPostId,[NSNumber numberWithBool:YES]];
                     
                     if(!qIns)
                     {
@@ -912,7 +913,7 @@
                 }
                 else
                 {
-                    BOOL ups = [theDb executeUpdate:@"update post set status = ?, block_id = ?, level = ?, address = ?, post_by = ?, post_topic = ?, post_type = ?, postal_code = ?, severity = ?, post_date = ?, contract_type = ?, dueDate = ?, updated_on = ?, seen = ? where post_id = ?",ActionStatus,BlkId,Level,Location,PostBy,PostTopic,PostType,PostalCode,Severity,PostDate,contractType,DueDate,LastUpdatedDate, [NSNumber numberWithBool:YES], PostId];
+                    BOOL ups = [theDb executeUpdate:@"update post set status = ?, block_id = ?, level = ?, address = ?, post_by = ?, post_topic = ?, post_type = ?, postal_code = ?, severity = ?, post_date = ?, contract_type = ?, dueDate = ?, updated_on = ?, seen = ?, relatedPostId = ? where post_id = ?",ActionStatus,BlkId,Level,Location,PostBy,PostTopic,PostType,PostalCode,Severity,PostDate,contractType,DueDate,LastUpdatedDate, [NSNumber numberWithBool:YES], RelatedPostId, PostId];
                     
                     if(!ups)
                     {
@@ -1766,9 +1767,9 @@
             
             [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
 
-                BOOL ups = [theDb executeUpdate:@"update contract_type set id = ?, contract = ?, isAllowedOutside = ? where id = ?",ContractTypeId,ContractTypeName, IsOutsideAllowed, ContractTypeId];
-                
-                if(!ups)
+                BOOL ins = [theDb executeUpdate:@"insert into contract_type(id, contract, isAllowedOutside) values (?,?,?)",ContractTypeId,ContractTypeName, IsOutsideAllowed];
+
+                if(!ins)
                 {
                     *rollback = YES;
                     return;

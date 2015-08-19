@@ -40,6 +40,8 @@
 
 - (NSArray *)fetchIssuesWithParamsForPMOthers:(NSDictionary *)params forPostId:(NSNumber *)postId filterByBlock:(BOOL)filter newIssuesFirst:(BOOL)newIssuesFirst onlyOverDue:(BOOL)onlyOverDue;
 
+- (NSArray *)fetchIssuesForCurrentUser;
+
 - (NSArray *)fetchIssuesForPO:(NSString *)poID;
 
 - (NSArray *)postsToSend;

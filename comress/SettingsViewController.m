@@ -237,6 +237,7 @@
                 @"comment_noti",
                 @"post_last_request_date",
                 @"post_image_last_request_date",
+                @"contract_type",
                 @"ro_checkarea_last_req_date",
                 @"ro_checklist_last_req_date",
                 @"ro_job_last_req_date",

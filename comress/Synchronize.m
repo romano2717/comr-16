@@ -2295,6 +2295,7 @@
             NSDate *DueDate = [myDatabase createNSDateWithWcfDateString:[dictPost valueForKey:@"DueDate"]];
             NSDate *LastUpdatedDate = [myDatabase createNSDateWithWcfDateString:[dictPost valueForKey:@"LastUpdatedDate"]];
             NSNumber *contractType = [NSNumber numberWithInt:[[dictPost valueForKey:@"PostGroup"] intValue]];
+            NSNumber *relatedPostId = [NSNumber numberWithInt:[[dictPost valueForKey:@"relatedPostId"] intValue]];
             
             fromUser = PostBy;
             msgFromUser = PostTopic;
@@ -2304,7 +2305,7 @@
                 FMResultSet *rsPost = [theDb executeQuery:@"select post_id from post where post_id = ?",PostId];
                 if([rsPost next] == NO) //does not exist. insert
                 {
-                    BOOL qIns = [theDb executeUpdate:@"insert into post (status, block_id, level, address, post_by, post_id, post_topic, post_type, postal_code, severity, post_date, updated_on,seen,contract_type, dueDate) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",ActionStatus, BlkId, Level, Location, PostBy, PostId, PostTopic, PostType, PostalCode, Severity, PostDate,LastUpdatedDate,[NSNumber numberWithBool:NO],contractType,DueDate];
+                    BOOL qIns = [theDb executeUpdate:@"insert into post (status, block_id, level, address, post_by, post_id, post_topic, post_type, postal_code, severity, post_date, updated_on,seen,contract_type, dueDate, relatedPostId) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",ActionStatus, BlkId, Level, Location, PostBy, PostId, PostTopic, PostType, PostalCode, Severity, PostDate,LastUpdatedDate,[NSNumber numberWithBool:NO],contractType,DueDate,relatedPostId];
                     
                     if(!qIns)
                     {
@@ -2316,7 +2317,7 @@
                 {
                     if([PostId intValue] > 0)
                     {
-                        BOOL qUps = [theDb executeUpdate:@"update post set status = ?, block_id = ?, level = ?, address = ?, post_by = ?, post_topic = ?, post_type = ?, postal_code = ?, severity = ?, post_date = ? ,contract_type = ?, dueDate = ?, updated_on = ? where post_id = ?",ActionStatus,BlkId,Level,Location,PostBy,PostTopic,PostType,PostalCode,Severity,PostDate,contractType,DueDate,LastUpdatedDate,PostId];
+                        BOOL qUps = [theDb executeUpdate:@"update post set status = ?, block_id = ?, level = ?, address = ?, post_by = ?, post_topic = ?, post_type = ?, postal_code = ?, severity = ?, post_date = ? ,contract_type = ?, dueDate = ?, updated_on = ?, relatedPostId = ?, seen = ?  where post_id = ?",ActionStatus,BlkId,Level,Location,PostBy,PostTopic,PostType,PostalCode,Severity,PostDate,contractType,DueDate,LastUpdatedDate,relatedPostId,[NSNumber numberWithBool:YES],PostId];
                         
                         if(!qUps)
                         {
@@ -3074,6 +3075,75 @@
             }
             
         }];
+        
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);
+    }];
+}
+
+- (void)startDownloadContractTypePage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate
+{
+    __block int currentPage = page;
+    __block NSDate *requestDate = reqDate;
+    
+    NSString *jsonDate = @"/Date(1388505600000+0800)/";
+    
+    if(currentPage > 1)
+        jsonDate = [NSString stringWithFormat:@"%@",requestDate];
+    
+    NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
+    
+    
+    [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_contract_types] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        
+        /*
+         dragons!
+         . delete entries of contract_type table and insert a new one. this is done this way to allow currently logged in user to auto update their contract types. once user is logged out, contract_type table is also emptied and a new one will be downloaded.
+         */
+        if(page == 1) //delete only once
+        {
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                BOOL del = [db executeUpdate:@"delete from contract_type"];
+                if(!del)
+                {
+                    *rollback = YES;
+                    return;
+                }
+            }];
+        }
+        
+        
+        NSDictionary *dict = [responseObject objectForKey:@"ContractTypeContainer"];
+        
+        int totalPage = [[dict valueForKey:@"TotalPages"] intValue];
+        NSDate *LastRequestDate = [dict valueForKey:@"LastRequestDate"];
+        
+        NSArray *dictArray = [dict objectForKey:@"ContractTypeList"];
+        
+        for (int i = 0; i < dictArray.count; i++) {
+            NSDictionary *dictList = [dictArray objectAtIndex:i];
+            
+            NSNumber *ContractTypeId = [dictList valueForKey:@"ContractTypeId"];
+            NSString *ContractTypeName = [dictList valueForKey:@"ContractTypeName"];
+            NSNumber *IsOutsideAllowed = [NSNumber numberWithBool:[[dictList valueForKey:@"IsOutsideAllowed"] boolValue]];
+            
+            [myDatabase.databaseQ inTransaction:^(FMDatabase *theDb, BOOL *rollback) {
+                
+                BOOL ins = [theDb executeUpdate:@"insert into contract_type(id, contract, isAllowedOutside) values (?,?,?)",ContractTypeId,ContractTypeName, IsOutsideAllowed];
+                
+                if(!ins)
+                {
+                    *rollback = YES;
+                    return;
+                }
+            }];
+        }
+        
+        if(currentPage < totalPage)
+        {
+            currentPage++;
+            [self startDownloadContractTypePage:currentPage totalPage:totalPage requestDate:LastRequestDate];
+        }
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DDLogVerbose(@"%@ [%@-%@]",error.localizedDescription,THIS_FILE,THIS_METHOD);

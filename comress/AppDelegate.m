@@ -464,6 +464,11 @@
         [sync startDownloadFeedBackIssuesForPage:1 totalPage:0 requestDate:jsonDate];
     });
     
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(15 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [sync startDownloadContractTypePage:1 totalPage:0 requestDate:jsonDate];
+    });
+    
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo

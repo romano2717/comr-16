@@ -516,10 +516,6 @@ contract_type;
                     
                     qOverdue = [[NSMutableString alloc] initWithString:[NSString stringWithFormat:@"select p.post_id,p.updated_on,client_post_id,bum.user_id from post p left join block_user_mapping bum on bum.block_id = p.block_id where p.block_id in (select block_id from block_user_mapping) and dueDate <= '%f' and status != %@  ", timestampDaysAgo, finishedStatus]];
                 }
-                
-                
-                
-
             }
             else //Others
             {
@@ -665,7 +661,7 @@ contract_type;
         
         NSMutableArray *divisionArray = [[NSMutableArray alloc] init];
         
-        FMResultSet *rsGetDiv = [db executeQuery:@"select division from block_user_mapping where supervisor_id != ? group by division",[myDatabase.userDictionary valueForKey:@"user_id"]];
+        FMResultSet *rsGetDiv = [db executeQuery:@"select division from block_user_mapping where lower(supervisor_id) != ? and lower(user_id) != ? group by division",[[myDatabase.userDictionary valueForKey:@"user_id"] lowercaseString],[[myDatabase.userDictionary valueForKey:@"user_id"] lowercaseString]];
 
         while ([rsGetDiv next]) {
             [divisionArray addObject:[rsGetDiv stringForColumn:@"division"]];
@@ -674,7 +670,7 @@ contract_type;
         
         for (int i = 0; i < divisionArray.count; i++) {
 
-            FMResultSet *rsGetUsers = [db executeQuery:@"select lower(user_id) as user_id from block_user_mapping where division = ? and supervisor_id != ? group by user_id",[divisionArray objectAtIndex:i],[myDatabase.userDictionary valueForKey:@"user_id"]];
+            FMResultSet *rsGetUsers = [db executeQuery:@"select lower(user_id) as user_id from block_user_mapping where division = ? and lower(supervisor_id) != ? and lower(user_id) != ? group by user_id",[divisionArray objectAtIndex:i],[[myDatabase.userDictionary valueForKey:@"user_id"] lowercaseString],[[myDatabase.userDictionary valueForKey:@"user_id"] lowercaseString]];
 
             NSMutableArray *usersArray = [[NSMutableArray alloc] init];
             
@@ -712,6 +708,34 @@ contract_type;
     return groupedUserPerDiv;
 }
 
+- (NSArray *)fetchIssuesForCurrentUser
+{
+    NSMutableArray *postArray = [[NSMutableArray alloc] init];
+    
+    NSMutableArray *postIdArray = [[NSMutableArray alloc] init];
+    
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        FMResultSet *rs = [db executeQuery:@"select client_post_id from post where lower(post_by) = ?",[[myDatabase.userDictionary valueForKey:@"user_id"] lowercaseString]];
+        
+        while ([rs next]) {
+            [postIdArray addObject:[NSNumber numberWithInt:[rs intForColumn:@"client_post_id"]]];
+        }
+    }];
+    
+    NSDictionary *params = @{@"order":@"order by updated_on desc"};
+
+    for (int i = 0; i < postIdArray.count; i++) {
+        
+        NSNumber *clientPostId = [postIdArray objectAtIndex:i];
+
+        NSArray *post = [self fetchIssuesWithParams:params forPostId:clientPostId filterByBlock:NO newIssuesFirst:NO onlyOverDue:NO fromSurvey:NO];
+        
+        if(post.count > 0)
+            [postArray addObject:[post firstObject]];
+    }
+    return postArray;
+}
+
 - (NSArray *)fetchIssuesForPO:(NSString *)poID
 {
     NSDictionary *params = @{@"order":@"order by updated_on desc"};
@@ -734,7 +758,7 @@ contract_type;
         
         NSNumber *thePostId = [postIdArray objectAtIndex:i];
         
-        NSArray *post = [self fetchIssuesWithParams:params forPostId:thePostId filterByBlock:NO newIssuesFirst:YES onlyOverDue:NO fromSurvey:NO];
+        NSArray *post = [self fetchIssuesWithParams:params forPostId:thePostId filterByBlock:NO newIssuesFirst:YES onlyOverDue:NO fromSurvey:NO ];
         
         if(post.count > 0)
             [postArray addObject:[post firstObject]];

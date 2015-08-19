@@ -48,6 +48,11 @@
     }
     
     
+    //if the user is a contractor, add an additional segment that lists down the issues created by the current logged in user
+    if([[myDatabase.userDictionary valueForKey:@"group_name"] rangeOfString:@"CT"].location != NSNotFound)
+        [self.segment insertSegmentWithTitle:@"Huh" atIndex:3 animated:NO];
+    
+    
     UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
     [refreshControl addTarget:self action:@selector(refresh:) forControlEvents:UIControlEventValueChanged];
     
@@ -438,13 +443,16 @@
             else
                 dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
         }
-        else
+        else if(self.segment.selectedSegmentIndex == 2)
         {
             if(POisLoggedIn)
                 dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
             else
                 dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
         }
+        else if(self.segment.selectedSegmentIndex == 3)
+            dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+            
         
         postId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
     }
@@ -471,11 +479,13 @@
             isFiltered = YES;
         else if(self.segment.selectedSegmentIndex == 1)
             isFiltered = NO;
-        else
+        else if(self.segment.selectedSegmentIndex == 2)
         {
             isFiltered = YES;
             cameFromOverDueList = YES;
         }
+        else if (self.segment.selectedSegmentIndex == 3)
+            isFiltered = NO;
         
         
         IssuesChatViewController *issuesVc = [segue destinationViewController];
@@ -562,8 +572,11 @@
                     [self groupPostForPM];
                 }
                 
+                //we don't need to see what's new in Others tab
+                [indexPathsOfNewPostsArray removeAllObjects];
+                indexPathsOfNewPostsArray = nil;
             }
-            else
+            else if(self.segment.selectedSegmentIndex == 2)
             {
                 if(POisLoggedIn)
                 {
@@ -586,6 +599,14 @@
                     
                     [self saveIndexPathsOfNewPostsWithSection:YES];
                 }
+            }
+            else if (self.segment.selectedSegmentIndex == 3)
+            {
+                self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesForCurrentUser]];
+                
+                //we don't need to see what's new in Others tab
+                [indexPathsOfNewPostsArray removeAllObjects];
+                indexPathsOfNewPostsArray = nil;
             }
             
             
@@ -795,16 +816,19 @@
         else
             count = self.sectionHeaders.count;
     }
+    
     else if(self.segment.selectedSegmentIndex == 1)
         count = self.sectionHeaders.count;
-    else
+    
+    else if(self.segment.selectedSegmentIndex == 2)
     {
         if(POisLoggedIn)
             count = 1;
         else
             count = self.sectionHeaders.count;
     }
-    
+    else if (self.segment.selectedSegmentIndex == 3)
+        count = 1;
     
     
     return count;
@@ -831,13 +855,15 @@
              count = [[self.postsArray objectAtIndex:section] count];
     }
     
-    else
+    else if(self.segment.selectedSegmentIndex == 2)
     {
         if(POisLoggedIn)
             count = self.postsArray.count;
         else
             count = [[self.postsArray objectAtIndex:section] count];
     }
+    else if (self.segment.selectedSegmentIndex == 3)
+        count = self.postsArray.count;
     
 
     return count;
@@ -873,7 +899,13 @@
             if(POisLoggedIn)
                 dict = (NSDictionary *)[self.postsArray safeObjectAtIndex:indexPath.row];
             else
-                dict = (NSDictionary *)[[self.postsArray safeObjectAtIndex:indexPath.section] safeObjectAtIndex:indexPath.row];
+            {
+                if(self.segment.selectedSegmentIndex != 3)
+                    dict = (NSDictionary *)[[self.postsArray safeObjectAtIndex:indexPath.section] safeObjectAtIndex:indexPath.row];
+                else
+                    dict = (NSDictionary *)[self.postsArray safeObjectAtIndex:indexPath.row];
+            }
+            
         }
         
         

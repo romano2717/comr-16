@@ -80,6 +80,8 @@
 
 - (void)startDownloadFeedBackIssuesForPage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate;
 
+- (void)startDownloadContractTypePage:(int)page totalPage:(int)totPage requestDate:(NSDate *)reqDate;
+
 //settings
 - (void)downloadUserSettings;
 

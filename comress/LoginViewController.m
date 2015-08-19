@@ -183,7 +183,7 @@
                             }
                         }
                         
-                        //delete images
+                        //delete images? image last request date is reset to default
                         NSArray *directoryContents =  [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)lastObject] error:NULL];
                         
                         if([directoryContents count] > 0)

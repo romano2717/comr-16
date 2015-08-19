@@ -8,7 +8,7 @@
 
 #import "Database.h"
 
-static const int newDatabaseVersion = 11; //this database version is incremented everytime the database version is updated
+static const int newDatabaseVersion = 12; //this database version is incremented everytime the database version is updated
 
 @implementation Database
 
@@ -212,12 +212,14 @@ static const int newDatabaseVersion = 11; //this database version is incremented
                                     
                                     @"CREATE TABLE if not exists set_action_group (ActionName VARCHAR (30), ActionValue INTEGER, GroupId INTEGER, GroupName VARCHAR (30));",
                                     
-                                    
                                     //5-aug-2015 reassign process
                                     @"CREATE TABLE if not exists post_reassign (client_reassign_post_id INTEGER PRIMARY KEY AUTOINCREMENT, reassign_post_id INTEGER DEFAULT (0), client_post_id DEFAULT (0), post_id DEFAULT (0), post_group DEFAULT (0), is_uploaded DEFAULT (0));",
                                     
                                     //5-aug-2015 add isAllowedOutside flag for contract type
-                                    @"ALTER TABLE contract_type add isAllowedOutside BOOLEAN DEFAULT (0)"
+                                    @"ALTER TABLE contract_type add isAllowedOutside BOOLEAN DEFAULT (0)",
+                                    
+                                    //19-aug-2015
+                                    @"ALTER TABLE post add relatedPostId INT DEFAULT(0)"
                                     ];
         
         

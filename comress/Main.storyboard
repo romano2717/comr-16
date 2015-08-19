@@ -826,11 +826,11 @@
                             <color key="tintColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                         </barButtonItem>
                         <view key="titleView" contentMode="scaleToFill" id="FtT-Ce-zml">
-                            <rect key="frame" x="193" y="5" width="214" height="34"/>
+                            <rect key="frame" x="51" y="5" width="498" height="34"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <subviews>
                                 <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="7BC-nV-1bB" customClass="MESegmentedControl">
-                                    <rect key="frame" x="8" y="3" width="198" height="30"/>
+                                    <rect key="frame" x="8" y="3" width="482" height="30"/>
                                     <segments>
                                         <segment title="Me"/>
                                         <segment title="Others"/>
@@ -868,7 +868,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="W5J-7L-Pyd" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1195" y="2156"/>
+            <point key="canvasLocation" x="1194" y="2155"/>
         </scene>
         <!--Close Issue Action View Controller-->
         <scene sceneID="oV9-QK-BEF">
