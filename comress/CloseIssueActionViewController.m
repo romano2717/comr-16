@@ -14,7 +14,7 @@
 
 @implementation CloseIssueActionViewController
 
-@synthesize indexPath,rowNum,calledFromList,dict;
+@synthesize indexPath,status,calledFromList,dict;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -93,7 +93,7 @@
     
     else
     {
-        NSDictionary *chatDict = @{@"actionsTaken":actionsString,@"remarks":remarks,@"dict":dict,@"rowNum":[NSNumber numberWithInt:rowNum]};
+        NSDictionary *chatDict = @{@"actionsTaken":actionsString,@"remarks":remarks,@"dict":dict,@"status":[NSNumber numberWithInt:status]};
         [[NSNotificationCenter defaultCenter] postNotificationName:@"closeIssueActionSubmitFromChat" object:nil userInfo:chatDict];
     }
     

@@ -20,7 +20,7 @@
 
 @implementation PostStatusTableViewController
 
-@synthesize delegate=_delegate,selectedStatus,nextStatusActions,allowedStatusActions,allowedStatusActionsVal;
+@synthesize delegate=_delegate,selectedStatus;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -29,26 +29,30 @@
     
     post = [[Post alloc] init];
     
-    NSArray *tempAlloweActions = [post getAvailableActions];
+    NSArray *allowedActions = [[post getAvailableActions] valueForKey:@"ActionValue"];
+    NSArray *nextActionsForCurrentAction = [post getActionSequenceForCurrentAction:[selectedStatus intValue]];
     
-    allowedStatusActions = [tempAlloweActions valueForKey:@"ActionName"];
-    allowedStatusActionsVal = [tempAlloweActions valueForKey:@"ActionValue"];
+    NSMutableArray *allowedActionsMutable = [[NSMutableArray alloc] init];
     
-    NSArray *tempNextActions = [post getActionSequenceForCurrentAction:[selectedStatus intValue]];
+    for (int i = 0; i < nextActionsForCurrentAction.count; i++) {
+        
+        NSNumber *nextAction = [NSNumber numberWithInt:[[[nextActionsForCurrentAction objectAtIndex:i] valueForKey:@"NextAction"] intValue]];
+        
+        if([allowedActions containsObject:nextAction] == NO)
+            continue;
+        else
+            [allowedActionsMutable addObject:[nextActionsForCurrentAction objectAtIndex:i]];
+    }
     
-    nextStatusActions = [tempNextActions valueForKey:@"NextAction"];
+    self.status = allowedActionsMutable;
     
-    
-    self.status = allowedStatusActions;
-    
-//    if([[myDatabase.userDictionary valueForKey:@"group_name"] isEqualToString:@"PO"])
-//        self.status = [NSArray arrayWithObjects:@"Pending",@"Start",@"Stop",@"Completed",@"Close", nil];
-//    else if ([[myDatabase.userDictionary valueForKey:@"group_name"] isEqualToString:@"CT_NU"])
-//        self.status = [NSArray arrayWithObjects:@"Pending",@"Start",@"Stop",@"Completed", nil];
-//    else
-//        self.status = [NSArray arrayWithObjects:@"Pending",@"Start",@"Stop",@"Completed",@"Close", nil];
-    
-
+    if(self.status.count == 0)
+    {
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(10, 10, CGRectGetWidth(self.view.frame), 20)];
+        label.text = @"Actions none required";
+        
+        [self.view addSubview:label];
+    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -79,51 +83,17 @@
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
     }
     
-    //default
-    cell.userInteractionEnabled = NO;
-    cell.backgroundColor = [UIColor lightGrayColor];
-    
-    
-    if(nextStatusActions.count == 0)
-    {
-        if([[[self.status objectAtIndex:indexPath.row] lowercaseString] isEqualToString:@"close"])
-        {
-            cell.userInteractionEnabled = NO;
-            cell.backgroundColor = [UIColor blueColor];
-        }
-    }
-    else
-    {
-        NSNumber *statusVal = [allowedStatusActionsVal objectAtIndex:indexPath.row];
-        
-        if([nextStatusActions containsObject:statusVal])
-        {
-            cell.userInteractionEnabled = YES;
-            cell.backgroundColor = [UIColor whiteColor];
-        }
-        else
-        {
-            //highlight the current status
-            if([[allowedStatusActionsVal objectAtIndex:indexPath.row] intValue] == [selectedStatus intValue])
-            {
-                cell.userInteractionEnabled = NO;
-                cell.backgroundColor = [UIColor blueColor];
-            }
-        }
-    }
-    
-    
     // Configure the cell...
-    cell.textLabel.text = [self.status objectAtIndex:indexPath.row];
+    cell.textLabel.text = [[self.status objectAtIndex:indexPath.row] valueForKey:@"NextActionName"];
     
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSNumber *row = [NSNumber numberWithInt:(int)indexPath.row];
+    NSDictionary *statusSelectedDict = [self.status objectAtIndex:indexPath.row];
         
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"selectedTableRow" object:nil userInfo:@{@"row":row}];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"selectedTableRow" object:nil userInfo:statusSelectedDict];
 }
 
 /*

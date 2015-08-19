@@ -18,8 +18,5 @@
 
 @property (nonatomic, assign) IssuesChatViewController *delegate;
 @property (nonatomic, assign) NSNumber *selectedStatus;
-@property (nonatomic, strong) NSMutableArray *allowedStatusActions;
-@property (nonatomic, strong) NSMutableArray *allowedStatusActionsVal;
 
-@property (nonatomic, strong) NSMutableArray *nextStatusActions;
 @end

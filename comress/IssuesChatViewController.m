@@ -193,23 +193,14 @@
 #pragma mark - status post update
 -(void)selectedTableRow:(NSNotification *)notif
 {
-    NSNumber *NSrowNum = [[notif userInfo] valueForKey:@"row"];
-    int rowNum = [NSrowNum intValue];
-    
-    NSDate *date = [NSDate date];
+    int nextActionVal = [[[notif userInfo] valueForKey:@"NextAction"] intValue];
 
-    NSString *statusString = [NSString stringWithFormat:@"Issue set status %@",[[post getActionDescriptionForStatus:rowNum] valueForKey:@"name"]] ;
-    theNewSelectedStatus = [NSNumber numberWithInt:rowNum];
+    NSDate *date = [NSDate date];
     
-    if(rowNum != 4)
-    {
-        theNewSelectedStatusCopy = theNewSelectedStatus;
-        
-        NSDictionary *dict = @{@"client_post_id":[NSNumber numberWithInt:self.postId], @"text":statusString,@"senderId":user.user_id,@"date":date,@"messageType":@"text",@"comment_type":[NSNumber numberWithInt:2]};
-        
-        [self continueClosingTheIssueWithDict:dict statusRowNum:rowNum withActionsDict:nil];
-    }
-    else
+    NSString *statusString = [NSString stringWithFormat:@"Issue set status %@",[[post getActionDescriptionForStatus:nextActionVal] valueForKey:@"name"]] ;
+    theNewSelectedStatus = [NSNumber numberWithInt:nextActionVal];
+    
+    if(nextActionVal == 4) //close
     {
         statusString = @"Issue set status Close";
         theNewSelectedStatus = [NSNumber numberWithInt:4];
@@ -217,21 +208,36 @@
         [self mz_dismissFormSheetControllerAnimated:YES completionHandler:^(MZFormSheetController *formSheetController) {
             NSDictionary *dict = @{@"client_post_id":[NSNumber numberWithInt:self.postId], @"text":statusString,@"senderId":user.user_id,@"date":date,@"messageType":@"text",@"comment_type":[NSNumber numberWithInt:2]};
             
-            [self POwillCloseTheIssueFromListWithDict:dict statusRowNum:rowNum];
+            [self POwillCloseTheIssueFromListWithDict:dict statusRowNum:nextActionVal];
         }];
+    }
+    else //other actions
+    {
+        theNewSelectedStatusCopy = theNewSelectedStatus;
+        
+        NSDictionary *dict = @{@"client_post_id":[NSNumber numberWithInt:self.postId], @"text":statusString,@"senderId":user.user_id,@"date":date,@"messageType":@"text",@"comment_type":[NSNumber numberWithInt:2]};
+        
+        [self continueClosingTheIssueWithDict:dict status:nextActionVal withActionsDict:nil];
     }
 }
 
-- (void)continueClosingTheIssueWithDict:(NSDictionary *)dict statusRowNum:(int)rowNum withActionsDict:(NSDictionary *)actionsDict
+- (void)continueClosingTheIssueWithDict:(NSDictionary *)dict status:(int)status withActionsDict:(NSDictionary *)actionsDict
 {
+    BOOL proceedWithStatusUpdate = NO;
+    
     [JSQSystemSoundPlayer jsq_playMessageSentSound];
     
-    if(rowNum != 4 && rowNum != 5)
-        [self saveCommentForMessage:dict];
-    else if (rowNum == 5)
+    if(status != 4 && status != 5)
     {
-        NSDictionary *toDict = @{@"rowNum":[NSNumber numberWithInt:rowNum],@"dict":dict};
+        [self saveCommentForMessage:dict];
+        proceedWithStatusUpdate = YES;
+    }
+    
+    else if (status == 5)
+    {
+        NSDictionary *toDict = @{@"status":[NSNumber numberWithInt:status],@"dict":dict};
         [self selectContractType:toDict];
+        proceedWithStatusUpdate = NO;
     }
     else
     {
@@ -246,20 +252,25 @@
         
         [self saveCommentForMessage:newDict];
         
+        proceedWithStatusUpdate = YES;
+        
     }
-    
-    [post updatePostStatusForClientPostId:[NSNumber numberWithInt:self.postId] withStatus:[NSNumber numberWithInteger:rowNum]];
-    
-    [self finishSendingMessageAnimated:YES];
-    
-    [self mz_dismissFormSheetControllerAnimated:YES completionHandler:nil];
+
+    if(proceedWithStatusUpdate == YES)
+    {
+        [post updatePostStatusForClientPostId:[NSNumber numberWithInt:self.postId] withStatus:[NSNumber numberWithInteger:status]];
+        
+        [self finishSendingMessageAnimated:YES];
+        
+        [self mz_dismissFormSheetControllerAnimated:YES completionHandler:nil];
+    }
 }
 
 
 - (void)POwillCloseTheIssueFromListWithDict:(NSDictionary *)dict statusRowNum:(int)rowNum
 {
     CloseIssueActionViewController *closeIssueVc = [self.storyboard instantiateViewControllerWithIdentifier:@"CloseIssueActionViewController"];
-    closeIssueVc.rowNum = rowNum;
+    closeIssueVc.status = rowNum;
     closeIssueVc.dict = dict;
     closeIssueVc.calledFromList = 0;
 
@@ -317,7 +328,7 @@
     }
     
     //close the issue
-    [self continueClosingTheIssueWithDict:[notifDict objectForKey:@"dict"] statusRowNum:[[notifDict valueForKey:@"rowNum"] intValue] withActionsDict:actionsDict];
+    [self continueClosingTheIssueWithDict:[notifDict objectForKey:@"dict"] status:[[notifDict valueForKey:@"status"] intValue] withActionsDict:actionsDict];
 }
 
 - (void)closeCloseIssueActionSubmitFromChat
@@ -1087,6 +1098,8 @@
         sync = nil;
         
     } cancelBlock:^(ActionSheetStringPicker *picker) {
+
+        theNewSelectedStatus = nil;
         
     } origin:self.actionButton];
     

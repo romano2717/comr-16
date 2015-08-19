@@ -665,27 +665,26 @@ contract_type;
         
         NSMutableArray *divisionArray = [[NSMutableArray alloc] init];
         
-        
-        
         FMResultSet *rsGetDiv = [db executeQuery:@"select division from block_user_mapping where supervisor_id != ? group by division",[myDatabase.userDictionary valueForKey:@"user_id"]];
-        
+
         while ([rsGetDiv next]) {
             [divisionArray addObject:[rsGetDiv stringForColumn:@"division"]];
         }
         
         
         for (int i = 0; i < divisionArray.count; i++) {
-            FMResultSet *rsGetUsers = [db executeQuery:@"select user_id from block_user_mapping where division = ? group by user_id",[divisionArray objectAtIndex:i]];
-            
+
+            FMResultSet *rsGetUsers = [db executeQuery:@"select lower(user_id) as user_id from block_user_mapping where division = ? and supervisor_id != ? group by user_id",[divisionArray objectAtIndex:i],[myDatabase.userDictionary valueForKey:@"user_id"]];
+
             NSMutableArray *usersArray = [[NSMutableArray alloc] init];
             
             while ([rsGetUsers next]) {
                 
-                NSString *userId = [rsGetUsers stringForColumn:@"user_id"];
+                NSString *userId = [[rsGetUsers stringForColumn:@"user_id"] lowercaseString];
                 
                 //count how many post belong to this user
-                FMResultSet *rsPostCount = [db executeQuery:@"select count(*) as count from post p left join block_user_mapping bum on p.block_id=bum.block_id where bum.user_id = ?",userId];
-                
+                FMResultSet *rsPostCount = [db executeQuery:@"select count(*) as count from post p left join block_user_mapping bum on p.block_id=bum.block_id where lower(bum.user_id) = ?",userId];
+
                 int postCount = 0;
                 int unreadPostCount = 0;
                 
@@ -693,9 +692,10 @@ contract_type;
                     postCount = [rsPostCount intForColumn:@"count"];
                 }
                 
-                
                 //count how many unread post for this user
-                FMResultSet *rsUnreadPostCount = [db executeQuery:@"select count(*)as count from comment_noti where post_id in(select post_id from post p left join block_user_mapping bum on p.block_id=bum.block_id where bum.user_id = ?)",userId];
+
+                
+                FMResultSet *rsUnreadPostCount = [db executeQuery:@"select count(*)as count from comment_noti where post_id in(select post_id from post p left join block_user_mapping bum on p.block_id=bum.block_id where lower(bum.user_id) = ?)",userId];
                 while ([rsUnreadPostCount next]) {
                     unreadPostCount = [rsUnreadPostCount intForColumn:@"count"];
                 }
@@ -720,7 +720,7 @@ contract_type;
     NSMutableArray *postIdArray = [[NSMutableArray alloc] init];
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-        FMResultSet *rs = [db executeQuery:@"select p.client_post_id from post p left join block_user_mapping bum on p.block_id = bum.block_id where bum.user_id = ? order by p.updated_on desc",poID];
+        FMResultSet *rs = [db executeQuery:@"select p.client_post_id from post p left join block_user_mapping bum on p.block_id = bum.block_id where lower(bum.user_id) = ? order by p.updated_on desc",poID];
         
        
         while ([rs next]) {

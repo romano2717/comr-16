@@ -14,7 +14,7 @@
 @property (nonatomic, strong) NSMutableArray *selectedActionsArray;
 @property (nonatomic, strong) NSArray *actions;
 @property (nonatomic, strong) NSIndexPath *indexPath;
-@property (nonatomic) int rowNum;
+@property (nonatomic) int status;
 @property (nonatomic) int calledFromList;
 @property (nonatomic, strong) NSDictionary *dict;
 

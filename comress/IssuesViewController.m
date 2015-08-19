@@ -553,20 +553,10 @@
                 }
                 else if (PMisLoggedIn)
                 {
-
-//                    if(newIssuesUp)
-//                        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParamsForPM:params forPostId:nil filterByBlock:NO newIssuesFirst:YES onlyOverDue:NO]];
-//                    else
-//                        self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParamsForPM:params forPostId:nil filterByBlock:NO newIssuesFirst:NO onlyOverDue:NO]];
-                    
-                    //
                     if(newIssuesUp)
                         self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParamsForPMOthers:params forPostId:nil filterByBlock:NO newIssuesFirst:YES onlyOverDue:NO]];
                     else
                         self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParamsForPMOthers:params forPostId:nil filterByBlock:NO newIssuesFirst:NO onlyOverDue:NO]];
-                    //
-                    
-//                    [post fetchIssuesWithParamsForPMOthers:params forPostId:nil filterByBlock:NO newIssuesFirst:NO onlyOverDue:NO];
                     
                     // group the post
                     [self groupPostForPM];
@@ -989,11 +979,18 @@
     
     NSArray *nextActionsArray = [post getActionSequenceForCurrentAction:status];
     
+    NSArray *allowedActions = [[post getAvailableActions] valueForKey:@"ActionValue"];
+    
+    //remove object from nextActionsArray that are not found in allowedActions
+    
     for (int i = 0; i < nextActionsArray.count; i++) {
         NSDictionary *dict = [nextActionsArray objectAtIndex:i];
         
         NSString *NextActionName = [dict valueForKey:@"NextActionName"];
         NSNumber *NextAction = [NSNumber numberWithInt:[[dict valueForKey:@"NextAction"] intValue]];
+        
+        if([allowedActions containsObject:NextAction] == NO)
+            continue;
         
         UITableViewRowAction *action = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:NextActionName handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
             if([NextAction intValue] != 5 &&  [NextAction intValue] != 4)//normal
@@ -1018,9 +1015,9 @@
         [rowActions addObject:action];
     }
     
-    if(rowActions.count == 0) //already closed, add closed as default with no handler
+    if(rowActions.count == 0) //no available actions
     {
-        UITableViewRowAction *closeAction = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Close" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
+        UITableViewRowAction *closeAction = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Actions none required" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
             
         }];
         closeAction.backgroundColor = [UIColor darkGrayColor];
