@@ -65,6 +65,7 @@
 @property (nonatomic, strong) UITapGestureRecognizer *tapNavBarTapGesture;
 @property (nonatomic) BOOL cameFromOverDueList;
 @property (nonatomic) BOOL cameFromSurvey;
+@property (nonatomic) int fromSegment;
 
 @property (nonatomic, assign) int selectedContractTypeId;
 

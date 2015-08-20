@@ -18,5 +18,6 @@
 
 @property (nonatomic, assign) IssuesChatViewController *delegate;
 @property (nonatomic, assign) NSNumber *selectedStatus;
+@property (nonatomic) BOOL actionsAreRequired;
 
 @end

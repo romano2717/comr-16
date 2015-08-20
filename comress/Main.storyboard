@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14E46" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="49e-Tb-3d3">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14F27" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="49e-Tb-3d3">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
         <capability name="Alignment constraints to the first baseline" minToolsVersion="6.0"/>
@@ -830,11 +830,12 @@
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <subviews>
                                 <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="7BC-nV-1bB" customClass="MESegmentedControl">
-                                    <rect key="frame" x="8" y="3" width="482" height="30"/>
+                                    <rect key="frame" x="8" y="3" width="482" height="29"/>
                                     <segments>
                                         <segment title="Me"/>
                                         <segment title="Others"/>
                                         <segment title="Overdue"/>
+                                        <segment title="Created"/>
                                     </segments>
                                     <color key="tintColor" red="0.0" green="0.48627450979999998" blue="0.69019607839999997" alpha="1" colorSpace="calibratedRGB"/>
                                     <connections>
@@ -845,9 +846,12 @@
                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                             <constraints>
                                 <constraint firstItem="7BC-nV-1bB" firstAttribute="top" secondItem="FtT-Ce-zml" secondAttribute="top" constant="3" id="4em-6o-p2i"/>
-                                <constraint firstAttribute="bottom" secondItem="7BC-nV-1bB" secondAttribute="bottom" constant="2" id="6d9-3B-eo8"/>
+                                <constraint firstAttribute="bottom" secondItem="7BC-nV-1bB" secondAttribute="bottom" constant="3" id="6d9-3B-eo8"/>
                                 <constraint firstItem="7BC-nV-1bB" firstAttribute="leading" secondItem="FtT-Ce-zml" secondAttribute="leading" constant="8" id="jYX-M3-uJa"/>
-                                <constraint firstAttribute="trailing" secondItem="7BC-nV-1bB" secondAttribute="trailing" constant="8" id="vbs-OC-oux"/>
+                                <constraint firstAttribute="trailing" secondItem="7BC-nV-1bB" secondAttribute="trailing" constant="8" id="vbs-OC-oux">
+                                    <variation key="widthClass=regular" constant="-0.5"/>
+                                    <variation key="heightClass=compact-widthClass=regular" constant="0.0"/>
+                                </constraint>
                             </constraints>
                         </view>
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="2GM-G1-x4m">
@@ -868,7 +872,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="W5J-7L-Pyd" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1194" y="2155"/>
+            <point key="canvasLocation" x="1194" y="2154"/>
         </scene>
         <!--Close Issue Action View Controller-->
         <scene sceneID="oV9-QK-BEF">

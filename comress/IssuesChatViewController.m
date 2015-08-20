@@ -19,7 +19,7 @@
 
 @implementation IssuesChatViewController
 
-@synthesize postId,postDict,commentsArray,theNewSelectedStatus,isFiltered,ServerPostId,theNewSelectedStatusCopy,hideActionStatusBtn,cameFromOverDueList;
+@synthesize postId,postDict,commentsArray,theNewSelectedStatus,isFiltered,ServerPostId,theNewSelectedStatusCopy,hideActionStatusBtn,cameFromOverDueList,fromSegment;
 
 @synthesize selectedContractTypeId;
 
@@ -341,9 +341,26 @@
 
 - (IBAction)postStatusActions:(id)sender
 {
+    __block BOOL actionsAreRequired = YES;
+    
+    if(fromSegment == 3)//user created issues, only allow status change on blocks that belongs to current user
+    {
+        actionsAreRequired = NO;
+        
+        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+            NSNumber *blockId = [NSNumber numberWithInt:[[[[postDict objectForKey:[[postDict allKeys] objectAtIndex:0]] objectForKey:@"post"] valueForKey:@"block_id"] intValue]];
+            
+            FMResultSet *rs = [db executeQuery:@"select block_id from blocks_user where block_id = ?",blockId];
+            
+            if([rs next])
+                actionsAreRequired = YES;
+        }];
+    }
+    
     
     postStatusVc = [[PostStatusTableViewController alloc] initWithStyle:UITableViewStylePlain];
     postStatusVc.delegate = self;
+    postStatusVc.actionsAreRequired = actionsAreRequired;
     
     NSNumber *postStatus;
     

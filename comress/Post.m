@@ -235,6 +235,16 @@ contract_type;
                 }
                 
                 
+                //check if the contract_type of this post is other (6), if so, don't add here
+                if(filter == YES && [[myDatabase.userDictionary valueForKey:@"group_name"] rangeOfString:@"CT"].location != NSNotFound)
+                {
+                    int theContractType = [rsPost intForColumn:@"contract_type"];
+                    
+                    if(theContractType == 6)
+                        continue;
+                }
+                
+                
                 if(postId == nil)
                 {
                     if(onlyOverDue == NO && filter == YES && postId == nil) //ME
@@ -689,8 +699,6 @@ contract_type;
                 }
                 
                 //count how many unread post for this user
-
-                
                 FMResultSet *rsUnreadPostCount = [db executeQuery:@"select count(*)as count from comment_noti where post_id in(select post_id from post p left join block_user_mapping bum on p.block_id=bum.block_id where lower(bum.user_id) = ?)",userId];
                 while ([rsUnreadPostCount next]) {
                     unreadPostCount = [rsUnreadPostCount intForColumn:@"count"];
@@ -715,7 +723,7 @@ contract_type;
     NSMutableArray *postIdArray = [[NSMutableArray alloc] init];
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-        FMResultSet *rs = [db executeQuery:@"select client_post_id from post where lower(post_by) = ?",[[myDatabase.userDictionary valueForKey:@"user_id"] lowercaseString]];
+        FMResultSet *rs = [db executeQuery:@"select client_post_id,post_id from post where lower(post_by) = ? order by updated_on desc",[[myDatabase.userDictionary valueForKey:@"user_id"] lowercaseString]];
         
         while ([rs next]) {
             [postIdArray addObject:[NSNumber numberWithInt:[rs intForColumn:@"client_post_id"]]];

@@ -3093,7 +3093,6 @@
     
     NSDictionary *params = @{@"currentPage":[NSNumber numberWithInt:page], @"lastRequestTime" : jsonDate};
     
-    
     [myDatabase.AfManager POST:[NSString stringWithFormat:@"%@%@",myDatabase.api_url,api_download_contract_types] parameters:params success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
         /*

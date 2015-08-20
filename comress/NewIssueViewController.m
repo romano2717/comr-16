@@ -17,8 +17,7 @@
 @property (nonatomic, strong) NSMutableArray *photoArray;
 @property (nonatomic, strong) NSMutableArray *photoArrayFull;
 @property (nonatomic, strong) NSArray *severtiyArray;
-@property (nonatomic, strong) NSArray *contractTypeArray;
-@property (nonatomic, strong) NSArray *contractTypeArrayCopy;
+@property (nonatomic, strong) NSMutableArray *contractsArray;
 @property (nonatomic, strong) NSMutableArray *blocksArray;
 @property (nonatomic, strong) NSMutableArray *addressArray;
 
@@ -40,8 +39,7 @@
     
     self.severtiyArray = [NSArray arrayWithObjects:@"Routine",@"Severe", nil];
     
-    self.contractTypeArray = [contract_type contractTypes];
-    self.contractTypeArrayCopy = self.contractTypeArray;
+    self.contractsArray = [[NSMutableArray alloc] initWithArray:[contract_type contractTypes]];
     
     blocks = [[Blocks alloc] init];
     
@@ -55,18 +53,9 @@
     //set the severity by default to Routine
     [self.severityBtn setTitle:[NSString stringWithFormat:@" %@",[self.severtiyArray objectAtIndex:0]] forState:UIControlStateNormal];
     
-    //set contract type default to first object
-    NSMutableArray *contractTypeArr = [[NSMutableArray alloc] init];
-    
-    for (int i = 0; i < self.contractTypeArray.count; i++) {
-        
-        if(i == 0)
-            selectedContractTypeId = [[[self.contractTypeArray objectAtIndex:i] valueForKey:@"id"] intValue];
-        
-        [contractTypeArr addObject:[[self.contractTypeArray objectAtIndex:i] valueForKey:@"contract"]];
-    }
-    self.contractTypeArray = contractTypeArr;
-    [self.contractTypeBtn setTitle:[NSString stringWithFormat:@" %@",[self.contractTypeArray firstObject]] forState:UIControlStateNormal];
+    //set default contract type to first object
+    [self.contractTypeBtn setTitle:[NSString stringWithFormat:@" %@",[[self.contractsArray firstObject] valueForKey:@"contract"]] forState:UIControlStateNormal];
+    selectedContractTypeId = [[[self.contractsArray firstObject] valueForKey:@"id"] intValue];
     
     //add border to the textview
     [[self.descriptionTextView layer] setBorderColor:[[UIColor lightGrayColor] CGColor]];
@@ -139,7 +128,35 @@
     self.addressTextField.text = [NSString stringWithFormat:@"%@ %@",[[result objectForKey:@"CustomObject"] valueForKey:@"block_no"],[[result objectForKey:@"CustomObject"] valueForKey:@"street_name"]];
     
     blockId = [[result objectForKey:@"CustomObject"] valueForKey:@"block_id"];
+    
+    //check if this blockId belongs to the current user, if not, only return the the contract type with isAllowedOutside = YES
+    __block BOOL blockExists = YES;
+    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        FMResultSet *rs = [db executeQuery:@"select block_id from blocks_user where block_id = ?",blockId];
+        
+        if([rs next] == NO) //does not exist
+        {
+            FMResultSet *rsContracts = [db executeQuery:@"select * from contract_type where isAllowedOutside = ?",[NSNumber numberWithBool:YES]];
+            
+            [self.contractsArray removeAllObjects];
+            while ([rsContracts next]) {
+                [self.contractsArray addObject:[rsContracts resultDictionary]];
+            }
+            
+            blockExists = NO;
+        }
+        else
+            blockExists = YES;
+    }];
 
+    if(blockExists) //reset to default contract type list
+        self.contractsArray = [[NSMutableArray alloc] initWithArray:[contract_type contractTypes]];
+
+    
+    //set default contract type to first object
+    [self.contractTypeBtn setTitle:[NSString stringWithFormat:@" %@",[[self.contractsArray firstObject] valueForKey:@"contract"]] forState:UIControlStateNormal];
+    selectedContractTypeId = [[[self.contractsArray firstObject] valueForKey:@"id"] intValue];
+    
 }
 
 - (void)keyboardWillChange:(NSNotification *)notification {
@@ -325,10 +342,10 @@
 {
     [self hideKeyboard:sender];
     
-    [ActionSheetStringPicker showPickerWithTitle:@"Contract type" rows:self.contractTypeArray initialSelection:0 doneBlock:^(ActionSheetStringPicker *picker, NSInteger selectedIndex, id selectedValue) {
+    [ActionSheetStringPicker showPickerWithTitle:@"Contract type" rows:[self.contractsArray valueForKey:@"contract"] initialSelection:0 doneBlock:^(ActionSheetStringPicker *picker, NSInteger selectedIndex, id selectedValue) {
 
-        [self.contractTypeBtn setTitle:[NSString stringWithFormat:@" %@",[self.contractTypeArray objectAtIndex:selectedIndex]] forState:UIControlStateNormal];
-        selectedContractTypeId = [[[self.contractTypeArrayCopy objectAtIndex:selectedIndex] valueForKey:@"id"] intValue];
+        [self.contractTypeBtn setTitle:[NSString stringWithFormat:@" %@",[[self.contractsArray objectAtIndex:selectedIndex] valueForKey:@"contract"]] forState:UIControlStateNormal];
+        selectedContractTypeId = [[[self.contractsArray objectAtIndex:selectedIndex] valueForKey:@"id"] intValue];
         
     } cancelBlock:^(ActionSheetStringPicker *picker) {
         
@@ -359,6 +376,13 @@
     NSString *post_topic = [self.descriptionTextView.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     NSString *severity = [self.severityBtn.titleLabel.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     NSNumber *contract_type_id = [NSNumber numberWithInt:selectedContractTypeId];
+    
+    if([contract_type_id intValue] == 0)
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"COMRESS" message:@"Please select a valid contract type" delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [alert show];
+        return;
+    }
     
     if(postal_code.length == 0)
     {

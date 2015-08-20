@@ -20,7 +20,7 @@
 
 @implementation PostStatusTableViewController
 
-@synthesize delegate=_delegate,selectedStatus;
+@synthesize delegate=_delegate,selectedStatus,actionsAreRequired;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -46,8 +46,10 @@
     
     self.status = allowedActionsMutable;
     
-    if(self.status.count == 0)
+    if(self.status.count == 0 || actionsAreRequired == NO)
     {
+        self.status = nil;
+        
         UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(10, 10, CGRectGetWidth(self.view.frame), 20)];
         label.text = @"Actions none required";
         

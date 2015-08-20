@@ -47,12 +47,6 @@
         POisLoggedIn = NO;
     }
     
-    
-    //if the user is a contractor, add an additional segment that lists down the issues created by the current logged in user
-    if([[myDatabase.userDictionary valueForKey:@"group_name"] rangeOfString:@"CT"].location != NSNotFound)
-        [self.segment insertSegmentWithTitle:@"Huh" atIndex:3 animated:NO];
-    
-    
     UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
     [refreshControl addTarget:self action:@selector(refresh:) forControlEvents:UIControlEventValueChanged];
     
@@ -494,6 +488,7 @@
         issuesVc.delegateModal = self;
         issuesVc.ServerPostId = ServerPostId;
         issuesVc.cameFromOverDueList = cameFromOverDueList;
+        issuesVc.fromSegment = (int)self.segment.selectedSegmentIndex;
     }
     else if ([segue.identifier isEqualToString:@"push_issues_list_per_po"])
     {
@@ -604,9 +599,7 @@
             {
                 self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesForCurrentUser]];
                 
-                //we don't need to see what's new in Others tab
-                [indexPathsOfNewPostsArray removeAllObjects];
-                indexPathsOfNewPostsArray = nil;
+                [self saveIndexPathsOfNewPostsWithSection:NO];
             }
             
             
@@ -951,13 +944,16 @@
     }
     if(self.segment.selectedSegmentIndex == 1)
         return [self.sectionHeaders objectAtIndex:section];
-    else
+    else if(self.segment.selectedSegmentIndex == 2)
     {
         if(POisLoggedIn)
             return nil;
         else
             return [self.sectionHeaders objectAtIndex:section];
     }
+    else if(self.segment.selectedSegmentIndex == 3)
+        return nil;
+        
     
     return nil;
 }
@@ -991,29 +987,58 @@
     }
     else if(self.segment.selectedSegmentIndex == 1)
         dict = (NSDictionary *)[[self.postsArray safeObjectAtIndex:indexPath.section] safeObjectAtIndex:indexPath.row];
-    else
+    else if(self.segment.selectedSegmentIndex == 2)
     {
         if(POisLoggedIn)
             dict = (NSDictionary *)[self.postsArray safeObjectAtIndex:indexPath.row];
         else
             dict = (NSDictionary *)[[self.postsArray safeObjectAtIndex:indexPath.section] safeObjectAtIndex:indexPath.row];
     }
-    
+    else if (self.segment.selectedSegmentIndex == 3)
+        dict = (NSDictionary *)[self.postsArray safeObjectAtIndex:indexPath.row];
     
     NSDictionary *topDict = (NSDictionary *)[[dict allValues] firstObject];
     NSDictionary *postDict = [topDict valueForKey:@"post"];
     
+    NSMutableArray *rowActions = [[NSMutableArray alloc] init];
+    
+    //check if this block_id belongs to the current user and viewing from 'created' segment(4th)
+    if(self.segment.selectedSegmentIndex == 3)
+    {
+        NSNumber *blockId = [NSNumber numberWithInt:[[postDict valueForKey:@"block_id"] intValue]];
+        __block BOOL blockBelongsToCurrentUser = NO;
+        
+        [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+            FMResultSet *rs = [db executeQuery:@"select block_id from blocks_user where block_id = ?",blockId];
+            
+            if([rs next])
+                blockBelongsToCurrentUser = YES;
+        }];
+        
+        if(blockBelongsToCurrentUser == NO)
+        {
+            UITableViewRowAction *actionNone = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Actions none required" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath) {
+                
+            }];
+            actionNone.backgroundColor = [UIColor darkGrayColor];
+            
+            [rowActions addObject:actionNone];
+            
+            return rowActions;
+        }
+    }
+    
+    
+    //continue
     int status = [[postDict valueForKey:@"status"] intValue] ? [[postDict valueForKey:@"status"] intValue] : 0;
     
     NSArray *actionsColor = [NSArray arrayWithObjects:[UIColor orangeColor],[UIColor orangeColor],[UIColor redColor],[UIColor greenColor],[UIColor darkGrayColor],[UIColor blueColor], nil];
     
-    NSMutableArray *rowActions = [[NSMutableArray alloc] init];
+    
     
     NSArray *nextActionsArray = [post getActionSequenceForCurrentAction:status];
     
     NSArray *allowedActions = [[post getAvailableActions] valueForKey:@"ActionValue"];
-    
-    //remove object from nextActionsArray that are not found in allowedActions
     
     for (int i = 0; i < nextActionsArray.count; i++) {
         NSDictionary *dict = [nextActionsArray objectAtIndex:i];
@@ -1029,6 +1054,8 @@
             {
                 [self setPostStatusAtIndexPath:indexPath withStatus:NextAction withPostDict:dict withActionsDict:nil];
                 [self fetchPostsWithNewIssuesUp:NO];
+                
+                [self.issuesTable setContentOffset:CGPointZero animated:YES];
             }
             
             if([NextAction intValue] == 4)
@@ -1115,13 +1142,15 @@
     }
     else if(self.segment.selectedSegmentIndex == 1)
         dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
-    else
+    else if(self.segment.selectedSegmentIndex == 2)
     {
         if(POisLoggedIn)
             dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
         else
             dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
     }
+    else if (self.segment.selectedSegmentIndex == 3)
+        dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
     
     
     //save PO action
@@ -1176,7 +1205,7 @@
         dict = (NSDictionary *)[[self.postsArray objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
         clickedPostId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
     }
-    else
+    else if(self.segment.selectedSegmentIndex == 2)
     {
         if(POisLoggedIn)
         {
@@ -1189,6 +1218,12 @@
             clickedPostId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
         }
     }
+    else if(self.segment.selectedSegmentIndex == 3)
+    {
+        dict = (NSDictionary *)[self.postsArray objectAtIndex:indexPath.row];
+        clickedPostId = [NSNumber numberWithInt:[[[dict allKeys] objectAtIndex:0] intValue]];
+    }
+
     
 
     //update status of this post
