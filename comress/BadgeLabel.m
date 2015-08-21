@@ -154,7 +154,7 @@
     CGFloat border = self.layer.borderWidth;
     CGRect newFrame = self.frame;
     newFrame.size.height += 2*border;
-    newFrame.size.width += 2*border;
+    newFrame.size.width += 2*border+3;
     self.frame = newFrame;
     CGFloat w = MAX(minWidth, self.bounds.size.height);
     if (self.bounds.size.width < w) {

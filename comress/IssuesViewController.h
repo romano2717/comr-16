@@ -23,6 +23,8 @@
 #import "IssueListPerPoViewController.h"
 #import "CustomBadge.h"
 #import "ActionSheetStringPicker.h"
+#import "STCollapseTableView.h"
+#import "BadgeLabel.h"
 
 @interface IssuesViewController : UIViewController<UITableViewDataSource,UITableViewDelegate,IssuesChatViewControllerDelegate,MZFormSheetBackgroundWindowDelegate,UIActionSheetDelegate>
 {
@@ -36,14 +38,17 @@
     BOOL POisLoggedIn;
 }
 
-@property (nonatomic, weak) IBOutlet UITableView *issuesTable;
+@property (nonatomic, weak) IBOutlet STCollapseTableView *issuesTable;
 @property (nonatomic, strong) IBOutlet MESegmentedControl *segment;
 @property (nonatomic, weak) IBOutlet UIButton *bulbButton;
 
 @property (nonatomic, assign) int selectedContractTypeId;
 
 @property (nonatomic, strong) NSMutableArray *indexPathsOfNewPostsArray;
+@property (nonatomic, strong) NSMutableArray *sectionsWithNewCommentsArray;
 
 @property (nonatomic, assign) int currentIndexSelected;
+
+@property (nonatomic) BOOL didTapCellToNavigate; //don't close the section when true
 
 @end

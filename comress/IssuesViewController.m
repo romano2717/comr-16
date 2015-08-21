@@ -21,11 +21,13 @@
 
 @property (nonatomic, strong) NSArray *sectionHeaders;
 
+@property (nonatomic) CGFloat tableViewRowHeight;
+
 @end
 
 @implementation IssuesViewController
 
-@synthesize selectedContractTypeId,indexPathsOfNewPostsArray,currentIndexSelected;
+@synthesize selectedContractTypeId,indexPathsOfNewPostsArray,currentIndexSelected,tableViewRowHeight,sectionsWithNewCommentsArray,didTapCellToNavigate;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -35,6 +37,11 @@
     
     comment = [[Comment alloc] init];
     user = [[Users alloc] init];
+    
+    tableViewRowHeight = 115.0f;
+    
+    didTapCellToNavigate = NO;
+    [self.issuesTable setExclusiveSections:YES];
     
     //check what kind of account is logged in
     POisLoggedIn = YES; //CT_NU uses the same logic as PO
@@ -97,6 +104,8 @@
         return;
     
     NSIndexPath *indexpath = [indexPathsOfNewPostsArray objectAtIndex:currentIndexSelected];
+    
+    [self.issuesTable openSection:indexpath.section animated:YES];
 
     [self.issuesTable scrollToRowAtIndexPath:indexpath atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
     
@@ -166,6 +175,8 @@
 
 - (IBAction)segmentControlChange:(id)sender
 {
+    didTapCellToNavigate = NO; //reset to close the sections when segment is changed
+    
     [self fetchPostsWithNewIssuesUp:NO];
 }
 
@@ -311,32 +322,34 @@
         else if (PMisLoggedIn)
         {
             //ME
-
-            NSArray *list = [self.meArr firstObject];
             
-            for (int i = 0; i < list.count; i++) {
+            NSArray *list = self.meArr;
+            for (int x = 0; x < list.count; x++) {
+                NSArray *postsArrayPerUser = [self.meArr objectAtIndex:x];
                 
-                if([list isKindOfClass:[NSArray class]] == NO)
-                    continue;
-                
-                NSString *key = [[[list objectAtIndex:i] allKeys] firstObject];
-                
-                if([[[[list objectAtIndex:i] objectForKey:key] valueForKey:@"post"] valueForKey:@"post_id"] == [NSNull null])
-                    continue;
-                
-                NSNumber *thisPostId = [NSNumber numberWithInt:[[[[[list objectAtIndex:i] objectForKey:key] valueForKey:@"post"] valueForKey:@"post_id"] intValue]];
-                
-                
-                [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-                    db.traceExecution = NO;
-                    FMResultSet *rs = [db executeQuery:@"select * from comment_noti where status = ? and post_id = ?",[NSNumber numberWithInt:1],thisPostId];
+                for (int i = 0; i < postsArrayPerUser.count; i++) {
                     
-                    while ([rs next]) {
-                        if([rs intForColumn:@"post_id"] > 0)
-                            meNewCommentsCtr++;
-                    }
-                }];
-                
+                    if([postsArrayPerUser isKindOfClass:[NSArray class]] == NO)
+                        continue;
+                    
+                    NSString *key = [[[postsArrayPerUser objectAtIndex:i] allKeys] firstObject];
+                    
+                    if([[[[postsArrayPerUser objectAtIndex:i] objectForKey:key] valueForKey:@"post"] valueForKey:@"post_id"] == [NSNull null])
+                        continue;
+                    
+                    NSNumber *thisPostId = [NSNumber numberWithInt:[[[[[postsArrayPerUser objectAtIndex:i] objectForKey:key] valueForKey:@"post"] valueForKey:@"post_id"] intValue]];
+
+                    [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
+                        db.traceExecution = NO;
+                        FMResultSet *rs = [db executeQuery:@"select * from comment_noti where status = ? and post_id = ?",[NSNumber numberWithInt:1],thisPostId];
+                        
+                        while ([rs next]) {
+                            if([rs intForColumn:@"post_id"] > 0)
+                                meNewCommentsCtr++;
+                        }
+                    }];
+                    
+                }
             }
             
             [self.segment setBadgeNumber:meNewCommentsCtr forSegmentAtIndex:0];
@@ -518,6 +531,9 @@
             
             NSDictionary *params = @{@"order":@"order by updated_on desc"};
             
+            [sectionsWithNewCommentsArray removeAllObjects];
+            sectionsWithNewCommentsArray = nil;
+            
             if(self.segment.selectedSegmentIndex == 0)
             {
                 if(POisLoggedIn)
@@ -528,6 +544,9 @@
                         self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:NO onlyOverDue:NO fromSurvey:NO]];
                     
                     [self saveIndexPathsOfNewPostsWithSection:NO];
+                    
+                    self.sectionHeaders = nil;
+                    [self.issuesTable openSection:0 animated:NO];
                 }
                 else if (PMisLoggedIn)
                 {
@@ -555,6 +574,8 @@
                         self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:NO newIssuesFirst:NO onlyOverDue:NO fromSurvey:NO]];
                     
                     [self groupPostForGroupType:@"under_by"];
+                    
+                    [self saveIndexPathsOfNewPostsWithSection:YES];
                 }
                 else if (PMisLoggedIn)
                 {
@@ -565,11 +586,11 @@
                     
                     // group the post
                     [self groupPostForPM];
+                    
+                    //we don't need to see what's new in Others tab for PM
+                    [indexPathsOfNewPostsArray removeAllObjects];
+                    indexPathsOfNewPostsArray = nil;
                 }
-                
-                //we don't need to see what's new in Others tab
-                [indexPathsOfNewPostsArray removeAllObjects];
-                indexPathsOfNewPostsArray = nil;
             }
             else if(self.segment.selectedSegmentIndex == 2)
             {
@@ -581,6 +602,9 @@
                         self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesWithParams:params forPostId:nil filterByBlock:YES newIssuesFirst:NO onlyOverDue:YES fromSurvey:NO]];
                     
                     [self saveIndexPathsOfNewPostsWithSection:NO];
+                    
+                    self.sectionHeaders = nil;
+                    [self.issuesTable openSection:0 animated:NO];
                 }
                 else if (PMisLoggedIn)
                 {
@@ -593,6 +617,7 @@
                     [self groupPostForGroupType:@"under_by"];
                     
                     [self saveIndexPathsOfNewPostsWithSection:YES];
+                    
                 }
             }
             else if (self.segment.selectedSegmentIndex == 3)
@@ -600,6 +625,9 @@
                 self.postsArray = [[NSMutableArray alloc] initWithArray:[post fetchIssuesForCurrentUser]];
                 
                 [self saveIndexPathsOfNewPostsWithSection:NO];
+                
+                self.sectionHeaders = nil;
+                [self.issuesTable openSection:0 animated:NO];
             }
             
             
@@ -615,7 +643,9 @@
                 }
                 else
                     [[NSNotificationCenter defaultCenter] postNotificationName:@"toggleBulbIcon" object:nil userInfo:@{@"toggle":@"off"}];
-                    
+                
+                if(self.sectionHeaders > 0 && didTapCellToNavigate == NO)
+                    [self.issuesTable closeAllSection];
             });
         }
         @catch (NSException *exception) {
@@ -654,13 +684,27 @@
     {
         NSArray *thePosts = self.postsArray;
         
+        sectionsWithNewCommentsArray = [[NSMutableArray alloc] init];
+        
         for (int i = 0; i < thePosts.count; i++) {
             NSArray *arr = [thePosts objectAtIndex:i];
+            
+            int newCommentsCountSum = 0;
             
             for (int x = 0; x < arr.count; x++) {
                 NSDictionary *dict = [arr objectAtIndex:x];
                 
                 NSDictionary *postDict = [[dict objectForKey:[[dict allKeys] firstObject]] objectForKey:@"post"];
+                
+                newCommentsCountSum += [[[dict objectForKey:[[dict allKeys] firstObject]] objectForKey:@"newCommentsCount"] intValue];
+
+                if(newCommentsCountSum > 0)
+                {
+                    NSDictionary *dict = @{@"newComments":[NSNumber numberWithInt:newCommentsCountSum],@"section":[NSNumber numberWithInt:i]};
+                    
+                    if([sectionsWithNewCommentsArray containsObject:dict] == NO)
+                        [sectionsWithNewCommentsArray addObject:dict];
+                }
                 
                 if([[postDict valueForKey:@"seen"] boolValue] == NO)
                 {
@@ -746,6 +790,8 @@
 {
     NSMutableArray *sectionHeaders = [[NSMutableArray alloc] init];
     
+    sectionsWithNewCommentsArray = [[NSMutableArray alloc] init];
+    
     //reconstruct array to create headers
     for (int i = 0; i < self.postsArray.count; i++) {
         NSDictionary *top = (NSDictionary *)[self.postsArray objectAtIndex:i];
@@ -777,7 +823,20 @@
             if([division isEqualToString:section])
             {
                 if([row containsObject:top] == NO)
+                {
                     [row addObject:top];
+                    NSArray *userGroupArray = [[top objectForKey:@"users"] valueForKey:@"unreadPost"];
+                    
+                    int sum = [[userGroupArray valueForKeyPath: @"@sum.self"] intValue];
+                    
+                    if(sum > 0)
+                    {
+                        NSDictionary *dict = @{@"newComments":[NSNumber numberWithInt:sum],@"section":[NSNumber numberWithInt:j]};
+                        if([sectionsWithNewCommentsArray containsObject:dict] == NO)
+                            [sectionsWithNewCommentsArray addObject:dict];
+                    }
+
+                }
             }
         }
         [groupedPost addObject:row];
@@ -792,7 +851,10 @@
     if(self.segment.selectedSegmentIndex == 1 && PMisLoggedIn)
         return 60.0f;
     else
-        return 115.0f;
+    {
+        return tableViewRowHeight;
+    }
+    
     
     return 0.0f;
 }
@@ -906,7 +968,7 @@
         if(PMisLoggedIn && self.segment.selectedSegmentIndex == 1) //PM and inside Others segment
         {
             IssuesPerPoTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:pmCellIdentifier forIndexPath:indexPath];
-                
+
             [cell initCellWithResultSet:dict];
             
             return cell;
@@ -914,7 +976,7 @@
         else
         {
             IssuesTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:nonPmCellIdentifier forIndexPath:indexPath];
-            
+
             [cell initCellWithResultSet:dict forSegment:self.segment.selectedSegmentIndex];
             
             return cell;
@@ -958,14 +1020,55 @@
     return nil;
 }
 
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if(self.sectionHeaders.count > 0 && self.segment.selectedSegmentIndex != 3)
+        return 42.0f;
+    return 0;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    if(self.sectionHeaders.count > 0 && self.segment.selectedSegmentIndex != 3)
+    {
+        UIButton *btn = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+        
+        btn.frame = CGRectMake(0, 0, self.view.frame.size.width, 42.0f);
+        [btn setTitle:[self.sectionHeaders objectAtIndex:section] forState:UIControlStateNormal];
+        btn.backgroundColor = [UIColor lightGrayColor];
+        [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        btn.titleLabel.font = [UIFont boldSystemFontOfSize:20];
+        btn.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
+        btn.tag = section;
+
+        for (int i = 0; i < sectionsWithNewCommentsArray.count; i++) {
+            NSDictionary *dict = [sectionsWithNewCommentsArray objectAtIndex:i];
+            
+            if([[dict valueForKey:@"section"] intValue] == section)
+            {
+                BadgeLabel *badge = [[BadgeLabel alloc] initWithFrame:CGRectMake(CGRectGetWidth(btn.frame) - 40, 10, 40, 40)];
+                badge.text = [NSString stringWithFormat:@"%d",[[dict valueForKey:@"newComments"] intValue]];
+                badge.backgroundColor = [UIColor blueColor];
+                badge.hasBorder = YES;
+                badge.textColor = [UIColor whiteColor];
+
+                [btn addSubview:badge];
+            }
+        }
+        return btn;
+    }
+    return nil;
+}
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    didTapCellToNavigate = YES;
+    
     if(self.segment.selectedSegmentIndex == 1 && PMisLoggedIn)
         [self performSegueWithIdentifier:@"push_issues_list_per_po" sender:indexPath];
     else
         [self performSegueWithIdentifier:@"push_chat_issues" sender:indexPath];
 }
-
 
 /*
  // Override to support conditional editing of the table view.

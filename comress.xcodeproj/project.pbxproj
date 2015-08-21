@@ -79,6 +79,9 @@
 		4D36D4451B183B7700773F94 /* jointlogo.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D36D4441B183B7700773F94 /* jointlogo.png */; };
 		4D37BDB81A9C2271006B414A /* back.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D37BDB71A9C2271006B414A /* back.png */; };
 		4D39FEFC1ACFE3940074A217 /* FeedBackViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D39FEFB1ACFE3940074A217 /* FeedBackViewController.m */; };
+		4D3A319C1B85DA6E00144067 /* STCollapseTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D3A319B1B85DA6E00144067 /* STCollapseTableView.m */; };
+		4D3A319F1B8713C900144067 /* arrow_open.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D3A319D1B8713C900144067 /* arrow_open.png */; };
+		4D3A31A01B8713C900144067 /* arrow_close.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D3A319E1B8713C900144067 /* arrow_close.png */; };
 		4D3CFD4B1B12D94300D01D13 /* combLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D3CFD4A1B12D94300D01D13 /* combLogo.png */; };
 		4D3CFD4E1B1448CB00D01D13 /* ASBPO.html in Resources */ = {isa = PBXBuildFile; fileRef = 4D3CFD4D1B1448CB00D01D13 /* ASBPO.html */; };
 		4D3CFD501B1589F600D01D13 /* settingsLogo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4D3CFD4F1B1589F600D01D13 /* settingsLogo@2x.png */; };
@@ -429,6 +432,10 @@
 		4D37BDB71A9C2271006B414A /* back.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = back.png; sourceTree = "<group>"; };
 		4D39FEFA1ACFE3940074A217 /* FeedBackViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeedBackViewController.h; sourceTree = "<group>"; };
 		4D39FEFB1ACFE3940074A217 /* FeedBackViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FeedBackViewController.m; sourceTree = "<group>"; };
+		4D3A319A1B85DA6E00144067 /* STCollapseTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STCollapseTableView.h; sourceTree = "<group>"; };
+		4D3A319B1B85DA6E00144067 /* STCollapseTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STCollapseTableView.m; sourceTree = "<group>"; };
+		4D3A319D1B8713C900144067 /* arrow_open.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = arrow_open.png; sourceTree = "<group>"; };
+		4D3A319E1B8713C900144067 /* arrow_close.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = arrow_close.png; sourceTree = "<group>"; };
 		4D3CFD4A1B12D94300D01D13 /* combLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = combLogo.png; sourceTree = "<group>"; };
 		4D3CFD4D1B1448CB00D01D13 /* ASBPO.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = ASBPO.html; sourceTree = "<group>"; };
 		4D3CFD4F1B1589F600D01D13 /* settingsLogo@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "settingsLogo@2x.png"; sourceTree = "<group>"; };
@@ -1055,6 +1062,15 @@
 			name = feedback;
 			sourceTree = "<group>";
 		};
+		4D3A31991B85DA4800144067 /* collapse table */ = {
+			isa = PBXGroup;
+			children = (
+				4D3A319A1B85DA6E00144067 /* STCollapseTableView.h */,
+				4D3A319B1B85DA6E00144067 /* STCollapseTableView.m */,
+			);
+			name = "collapse table";
+			sourceTree = "<group>";
+		};
 		4D3CFD4C1B1448B300D01D13 /* Average Sentiment */ = {
 			isa = PBXGroup;
 			children = (
@@ -1358,6 +1374,7 @@
 		4DA203EA1A79CC2B00C7E5C7 /* Libs */ = {
 			isa = PBXGroup;
 			children = (
+				4D3A31991B85DA4800144067 /* collapse table */,
 				4DEFCD191B42479800100B81 /* NSArray helper */,
 				4D68561D1B01B543008D2A74 /* ALAsset */,
 				4D2496401AE64013008A786E /* mzform */,
@@ -1439,6 +1456,8 @@
 		4DA2041A1A79CF7400C7E5C7 /* images */ = {
 			isa = PBXGroup;
 			children = (
+				4D3A319D1B8713C900144067 /* arrow_open.png */,
+				4D3A319E1B8713C900144067 /* arrow_close.png */,
 				4D3CFD4A1B12D94300D01D13 /* combLogo.png */,
 				4D1265C71AE2C7A100D9A512 /* from design */,
 				4D1FCE1A1ADB9D18005381FA /* user@2x.png */,
@@ -2078,6 +2097,7 @@
 			files = (
 				4D68564A1B035887008D2A74 /* img in Resources */,
 				4D8AC9601AAD8AE3008F7652 /* routine.png in Resources */,
+				4D3A31A01B8713C900144067 /* arrow_close.png in Resources */,
 				4DA207E41A79DA0A00C7E5C7 /* JSQMessagesViewController.xib in Resources */,
 				4D8AC9721AAD91A4008F7652 /* bulb_off@2x.png in Resources */,
 				4D337D331ACBE8BC00F9C7AA /* radio_off@2x.png in Resources */,
@@ -2148,6 +2168,7 @@
 				4D8AC95E1AAD8AE3008F7652 /* issue.png in Resources */,
 				4D337D4D1ACBFFB200F9C7AA /* excellent@2x.png in Resources */,
 				4DE801AA1AD26AAB008B0236 /* fourstars@2x.png in Resources */,
+				4D3A319F1B8713C900144067 /* arrow_open.png in Resources */,
 				4D878D291AD4FDC8000CC3FC /* top_tptclogo_new1.gif in Resources */,
 				4D85E6B01AD7930100170D66 /* threeOfThreeStars@2x.png in Resources */,
 				4D6424CB1AD3CF3800B6B974 /* tree@2x.png in Resources */,
@@ -2220,6 +2241,7 @@
 				4DA207F61A79DA0A00C7E5C7 /* JSQMessagesCollectionViewCell.m in Sources */,
 				4DD6FEAA1A884CFF00CBBE1D /* UIImage+WebP.m in Sources */,
 				4DA208031A79DA0A00C7E5C7 /* JSQMessagesTypingIndicatorFooterView.m in Sources */,
+				4D3A319C1B85DA6E00144067 /* STCollapseTableView.m in Sources */,
 				4D6856381B0331A2008D2A74 /* ActionSheetDatePicker.m in Sources */,
 				4DA207DC1A79DA0A00C7E5C7 /* JSQSystemSoundPlayer+JSQMessages.m in Sources */,
 				4DA207E71A79DA0A00C7E5C7 /* JSQMessagesMediaViewBubbleImageMasker.m in Sources */,

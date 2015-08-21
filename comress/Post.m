@@ -688,9 +688,9 @@ contract_type;
                 
                 NSString *userId = [[rsGetUsers stringForColumn:@"user_id"] lowercaseString];
                 
-                //count how many post belong to this user
-                FMResultSet *rsPostCount = [db executeQuery:@"select count(*) as count from post p left join block_user_mapping bum on p.block_id=bum.block_id where lower(bum.user_id) = ?",userId];
-
+                //count how many post belong to this user under this division
+                FMResultSet *rsPostCount = [db executeQuery:@"select count(*) as count from post p left join block_user_mapping bum on p.block_id=bum.block_id where lower(bum.user_id) = ? and bum.division = ?",userId,[divisionArray objectAtIndex:i]];
+                
                 int postCount = 0;
                 int unreadPostCount = 0;
                 
@@ -699,7 +699,7 @@ contract_type;
                 }
                 
                 //count how many unread post for this user
-                FMResultSet *rsUnreadPostCount = [db executeQuery:@"select count(*)as count from comment_noti where post_id in(select post_id from post p left join block_user_mapping bum on p.block_id=bum.block_id where lower(bum.user_id) = ?)",userId];
+                FMResultSet *rsUnreadPostCount = [db executeQuery:@"select count(*)as count from comment_noti where post_id in(select post_id from post p left join block_user_mapping bum on p.block_id=bum.block_id where lower(bum.user_id) = ?) and status = ?",userId,[NSNumber numberWithInt:1]];
                 while ([rsUnreadPostCount next]) {
                     unreadPostCount = [rsUnreadPostCount intForColumn:@"count"];
                 }
@@ -744,7 +744,7 @@ contract_type;
     return postArray;
 }
 
-- (NSArray *)fetchIssuesForPO:(NSString *)poID
+- (NSArray *)fetchIssuesForPO:(NSString *)poID division:(NSString *)division
 {
     NSDictionary *params = @{@"order":@"order by updated_on desc"};
     
@@ -752,7 +752,7 @@ contract_type;
     NSMutableArray *postIdArray = [[NSMutableArray alloc] init];
     
     [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
-        FMResultSet *rs = [db executeQuery:@"select p.client_post_id from post p left join block_user_mapping bum on p.block_id = bum.block_id where lower(bum.user_id) = ? order by p.updated_on desc",poID];
+        FMResultSet *rs = [db executeQuery:@"select p.client_post_id from post p left join block_user_mapping bum on p.block_id = bum.block_id where lower(bum.user_id) = ? and bum.division = ? order by p.updated_on desc",poID,division];
         
        
         while ([rs next]) {

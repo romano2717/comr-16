@@ -42,7 +42,7 @@
 
 - (NSArray *)fetchIssuesForCurrentUser;
 
-- (NSArray *)fetchIssuesForPO:(NSString *)poID;
+- (NSArray *)fetchIssuesForPO:(NSString *)poID division:(NSString *)division;
 
 - (NSArray *)postsToSend;
 

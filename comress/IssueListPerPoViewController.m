@@ -92,7 +92,7 @@
 {
     [super viewWillAppear:animated];
     
-    self.postsArray = [post fetchIssuesForPO:[poDict valueForKey:@"user"]];
+    self.postsArray = [post fetchIssuesForPO:[poDict valueForKey:@"user"] division:[poDict valueForKey:@"division"]];
 }
 
 
