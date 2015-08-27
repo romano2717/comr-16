@@ -8,6 +8,7 @@
 
 #import "AppDelegate.h"
 
+
 #if DEBUG
     NSString *appName = @"ios_COMRESS_tptc_test";
 #else
@@ -83,7 +84,13 @@
     }
     
     //[[UINavigationBar appearance] setBarTintColor:[UIColor colorWithRed:0 green:125.0f/255.0f blue:176.0f/255.0f alpha:1.0f]];
+
+    [Fabric with:@[[Crashlytics class]]];
     
+    //custom objects to pass when app crash
+    [[Crashlytics sharedInstance] setObjectValue:myDatabase.userDictionary forKey:@"user"];
+    [[Crashlytics sharedInstance] setObjectValue:myDatabase.clientDictionary forKey:@"client"];
+
     
     return YES;
 }
@@ -259,17 +266,9 @@
     //check if app text size was set
     float appTextSize = [[[NSUserDefaults standardUserDefaults] objectForKey:@"appTextSize"] floatValue];
     DDLogVerbose(@"appTextSize %f",appTextSize);
-    if(appTextSize == 18.0f)
-    {
-        [[UILabel appearance] setFont:[UIFont systemFontOfSize:18.0f]];
-    }
-    else if (appTextSize == 23.0f)
-    {
-        [[UILabel appearance] setFont:[UIFont systemFontOfSize:23.0f]];
-    }
-    else
-        DDLogVerbose(@"meh font!");
-    
+    if(appTextSize > 0)
+        [myDatabase setUiAppearanceTextSize:appTextSize];
+
     [[NSNotificationCenter defaultCenter] postNotificationName:@"downloadNewItems" object:nil];
     
     

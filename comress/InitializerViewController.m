@@ -1014,6 +1014,19 @@
                         }
                     }
                 }
+                else //update
+                {
+                    if(lat > 0 && lon > 0)
+                    {
+                        BOOL ups = [theDb executeUpdate:@"update blocks set block_no = ?, is_own_block = ?, postal_code = ?, street_name = ?, latitude = ?, longitude = ?, cos_lat = ?, cos_lng = ?, sin_lat = ?, sin_lng = ? where block_id = ? ",BlkNo,IsOwnBlk,PostalCode,StreetName,lat,lon,cos_lat_val,cos_lng_val,sin_lat_val,sin_lng_val,BlkId];
+                        
+                        if(!ups)
+                        {
+                            *rollback = YES;
+                            return;
+                        }
+                    }
+                }
             }];
         }
         

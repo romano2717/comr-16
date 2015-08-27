@@ -254,6 +254,7 @@
                     
                     if(loginOk)
                     {
+                        [Answers logCustomEventWithName:@"login" customAttributes:myDatabase.userDictionary];
                         
                         [sync downloadUserSettings];
                         [self performSegueWithIdentifier:@"push_main_view" sender:self];

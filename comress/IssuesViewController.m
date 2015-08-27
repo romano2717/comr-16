@@ -43,6 +43,7 @@
     didTapCellToNavigate = NO;
     [self.issuesTable setExclusiveSections:YES];
     
+    
     //check what kind of account is logged in
     POisLoggedIn = YES; //CT_NU uses the same logic as PO
     
@@ -196,12 +197,15 @@
     self.tabBarController.tabBar.hidden = NO;
     //self.navigationController.navigationBar.hidden = YES;
     self.hidesBottomBarWhenPushed = NO;
+    
+    [self setSegmentTextSizeToFixed];
 }
 
-- (void)viewDidDisappear:(BOOL)animated
+- (void)viewWillDisappear:(BOOL)animated
 {
-    [super viewDidDisappear:animated];
+    [super viewWillDisappear:animated];
     
+    [self setSegmentTextSizeToFixed];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -215,8 +219,20 @@
     
     [self.issuesTable reloadData];
     
-    //test code
-    //[post postLIstForSegment:@"OVERDUE" forUserType:@"PO"];
+    [self setSegmentTextSizeToFixed];
+}
+
+- (void)setSegmentTextSizeToFixed
+{
+    //set the uisegment text size to a fixed value
+    UIFont *font = [UIFont systemFontOfSize:segmentTextSize];
+    NSDictionary *attributes = [NSDictionary dictionaryWithObject:font forKey:NSFontAttributeName];
+    [self.segment setTitleTextAttributes:attributes forState:UIControlStateNormal|UIControlStateHighlighted|UIControlStateSelected];
+    
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW,(int64_t)(0.005 * NSEC_PER_SEC));
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void) {
+        [self.segment setNeedsDisplay];
+    });
 }
 
 - (void)setSegmentBadge

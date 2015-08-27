@@ -325,5 +325,28 @@ static const int newDatabaseVersion = 12; //this database version is incremented
     }];
 }
 
+- (void)setUiAppearanceTextSize:(CGFloat)size
+{
+    if(size > 0)
+    {
+        UIFont *theFont;
+        
+        if(size == 18.0f)
+            theFont = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
+        else if(size == 23.0f)
+            theFont = [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
+        else if(size == 12.0)
+            theFont = [UIFont preferredFontForTextStyle:UIFontTextStyleCaption1];
+        
+        
+        DDLogVerbose(@"set app text size to:%f",size);
+        [[UILabel appearance] setFont:theFont];
+        [[[UIButton appearance] titleLabel] setFont:theFont];
+        [[[UITableViewCell appearance] textLabel] setFont:theFont];
+    }
+}
+
+
+
 
 @end

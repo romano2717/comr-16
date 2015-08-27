@@ -120,12 +120,13 @@
     switch (slideValue) {
         case 5:
         {
-            [[UILabel appearance] setFont:[UIFont systemFontOfSize:18.0f]];
+            [myDatabase setUiAppearanceTextSize:18.0f];
             [self.textSizeSample setFont:[UIFont systemFontOfSize:18.0f]];
             
             [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithFloat:18.0f] forKey:@"appTextSize"];
             
-            dispatch_async(dispatch_get_main_queue(), ^{
+            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW,(int64_t)(0.005 * NSEC_PER_SEC));
+            dispatch_after(popTime, dispatch_get_main_queue(), ^(void) {
                 [self.view setNeedsDisplay];
             });
             
@@ -135,12 +136,13 @@
             
         case 10:
         {
-            [[UILabel appearance] setFont:[UIFont systemFontOfSize:23.0f]];
+            [myDatabase setUiAppearanceTextSize:23.0f];
             [self.textSizeSample setFont:[UIFont systemFontOfSize:23.0f]];
             
             [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithFloat:23.0f] forKey:@"appTextSize"];
             
-            dispatch_async(dispatch_get_main_queue(), ^{
+            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW,(int64_t)(0.005 * NSEC_PER_SEC));
+            dispatch_after(popTime, dispatch_get_main_queue(), ^(void) {
                 [self.view setNeedsDisplay];
             });
             break;
@@ -148,18 +150,25 @@
             
         case 0:
         {
-            [[UILabel appearance] setFont:[UIFont systemFontOfSize:12.0f]];
+            [myDatabase setUiAppearanceTextSize:12.0f];
             [self.textSizeSample setFont:[UIFont systemFontOfSize:12.0f]];
             
             [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithFloat:12.0f] forKey:@"appTextSize"];
             
-            dispatch_async(dispatch_get_main_queue(), ^{
+            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW,(int64_t)(0.005 * NSEC_PER_SEC));
+            dispatch_after(popTime, dispatch_get_main_queue(), ^(void) {
                 [self.view setNeedsDisplay];
             });
             break;
         }
             
     }
+}
+
+- (IBAction)textSizeInfo:(id)sender
+{
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"COMRESS" message:@"For a better text size scaling, you can also set the text size in Settings->General->Accessibility->Large Text" delegate:nil cancelButtonTitle:@"Okay" otherButtonTitles:nil, nil];
+    [alert show];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -224,6 +233,8 @@
         NSDictionary *dict = (NSDictionary *)responseObject;
         if([[dict valueForKey:@"Result"] intValue] == 1)
         {
+            [Answers logCustomEventWithName:@"Sign out" customAttributes:myDatabase.userDictionary];
+            
             [myDatabase.databaseQ inTransaction:^(FMDatabase *db, BOOL *rollback) {
                 db.traceExecution = NO;
                 

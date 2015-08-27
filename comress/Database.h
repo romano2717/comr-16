@@ -64,5 +64,7 @@
 
 - (BOOL)setInitTo:(int)flag;
 
+- (void)setUiAppearanceTextSize:(CGFloat)size;
+
 
 @end

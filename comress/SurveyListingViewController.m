@@ -71,6 +71,8 @@
         [self fetchSurvey];
         reloadSurveyList = NO;
     }
+    
+    [self setSegmentTextSizeToFixed];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -78,6 +80,20 @@
     [super viewDidAppear:animated];
     
     [self.surveyTableView reloadData];
+    
+    [self setSegmentTextSizeToFixed];
+}
+
+
+- (void)setSegmentTextSizeToFixed
+{
+    //set the uisegment text size to a fixed value
+    UIFont *font = [UIFont boldSystemFontOfSize:segmentTextSize];
+    NSDictionary *attributes = [NSDictionary dictionaryWithObject:font forKey:NSFontAttributeName];
+    [self.segment setTitleTextAttributes:attributes forState:0|1|2];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.segment setNeedsDisplay];
+    });
 }
 
 - (IBAction)segmentChanged:(id)sender

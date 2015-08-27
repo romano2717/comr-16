@@ -10,8 +10,11 @@
 #import "Database.h"
 #import "Users.h"
 #import "Client.h"
+#import <MoPub/MPInterstitialAdController.h>
 
-@interface SettingsViewController : UIViewController<UIAlertViewDelegate>
+
+@interface SettingsViewController : UIViewController<UIAlertViewDelegate,MPInterstitialAdControllerDelegate>
+
 {
     Database *myDatabase;
     
@@ -24,4 +27,7 @@
 @property (nonatomic, weak) IBOutlet UISlider *slider;
 @property (nonatomic, weak) IBOutlet UISwitch *sliderSwitch;
 @property (nonatomic, weak) IBOutlet UILabel *textSizeSample;
+
+@property (nonatomic, retain) MPInterstitialAdController *interstitial;
+
 @end

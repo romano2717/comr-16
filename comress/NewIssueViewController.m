@@ -485,6 +485,8 @@
             });
         }];
     }
+    
+    [Answers logCustomEventWithName:@"Created Issue" customAttributes:myDatabase.userDictionary];
 }
 
 @end
